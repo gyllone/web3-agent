@@ -7,6 +7,8 @@ conda install pydantic -c conda-forge
 pip install web3
 pip install fastapi
 pip install uvicorn
+pip install argparse
+pip install nest_asyncio
 pip install "redis[hiredis]"
 ```
 
@@ -16,4 +18,9 @@ pip install "redis[hiredis]"
 conda env export --no-builds | findstr /v "prefix:" > environment.yml
 # unix
 conda env export --no-builds | grep -v "^prefix:" > environment.yml
+```
+
+## Import env
+```bash
+conda env create -f environment.yml
 ```
