@@ -4,6 +4,7 @@
 ```bash
 conda install -y 'langchain[all]' -c conda-forge
 conda install pydantic -c conda-forge
+pip install openai
 pip install web3
 pip install fastapi
 pip install uvicorn

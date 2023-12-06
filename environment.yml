@@ -1,4 +1,4 @@
-name: trading-agent
+name: tradingGPT
 channels:
   - conda-forge
   - defaults
