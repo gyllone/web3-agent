@@ -11,7 +11,7 @@ class Output(JsonData):
     @classmethod
     def _format_lines(cls) -> Iterable[str]:
         schema = cls.schema()
-        properties: Dict = schema.get("properties", {})
+        properties: Dict = schema["properties"]
         return [
             _output_format.format(
                 name=name,

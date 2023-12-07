@@ -18,8 +18,6 @@ class RoutingRequest(BaseModel):
         exact_out: str = "exactOut"
 
 
-
-
 class RoutingResponse(BaseModel):
     block_number: str = Field(alias="blockNumber")
     amount_decimals: str = Field(alias="amountDecimals")
