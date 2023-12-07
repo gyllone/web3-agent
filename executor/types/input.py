@@ -1,12 +1,12 @@
 from typing import Dict, Iterable, List
 
-from executor.types.base import JsonData
+from executor.types.base import JsonItem
 
 
-_input_format = '\t"{name}": {type}  // {description} (optional: {optional})'
+_input_format = "- **{name}** `{type}` *{optional}*\n{description}"
 
 
-class Input(JsonData):
+class Input(JsonItem):
 
     @classmethod
     def _format_lines(cls) -> Iterable[str]:
@@ -16,8 +16,8 @@ class Input(JsonData):
         return [
             _input_format.format(
                 name=name,
-                type=item.get("type", "undefined"),
-                description=item.get("description", ""),
-                optional=name not in required,
+                type=item["type"],
+                optional="required" if name in required else "optional",
+                description=item.get("description", "nothing"),
             ) for name, item in properties.items()
         ]

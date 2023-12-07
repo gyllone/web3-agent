@@ -1,12 +1,12 @@
 from typing import Dict, Iterable
 
-from executor.types.base import JsonData
+from executor.types.base import JsonItem
 
 
 _output_format = '\t"{name}": {type}  // {description}'
 
 
-class Output(JsonData):
+class Output(JsonItem):
 
     @classmethod
     def _format_lines(cls) -> Iterable[str]:
