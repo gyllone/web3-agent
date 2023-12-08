@@ -1,16 +1,17 @@
 from abc import abstractmethod
-from typing import Any, List, Dict
-from pydantic import BaseModel, validator
+from typing import Any
+from pydantic import validator
 
-from executor.types.base import Instruction
-from executor.types.input import Input
-from executor.types.output import Output
+from executor.types.json_item import Instruction
+from executor.types.io import Input, Output
 
 
 _executor_format = """
-{name}
+# {name}
 {description}
+## Inputs
 {input}
+## Outputs
 {output}
 """
 
@@ -33,10 +34,31 @@ class Executor(Instruction):
 
     @classmethod
     def instruction(cls) -> str:
-        schema = cls.schema()
         return _executor_format.format(
-            name=schema.get("name", "unknown"),
-            description=schema.get("description", "nothing"),
-            input=cls.input.instruction(),
-            output=cls.output.instruction(),
+            name=cls.title(),
+            usage=cls.description(),
+            input=cls.input_instruction(),
+            output=cls.output_instruction(),
         )
+
+    @classmethod
+    def title(cls) -> str:
+        return cls.schema()["title"]
+
+    @classmethod
+    def description(cls) -> str:
+        return cls.schema()["description"]
+
+    @classmethod
+    def input_instruction(cls) -> str:
+        return cls.__annotations__["input"].instruction()
+
+    @classmethod
+    def output_instruction(cls) -> str:
+        return cls.__annotations__["output"].instruction()
+
+    def execute(self, _input: Input, **kwargs) -> Output:
+        raise NotImplementedError
+
+    async def async_execute(self, _input: Input, **kwargs) -> Output:
+        raise NotImplementedError
