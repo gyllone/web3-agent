@@ -24,4 +24,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: gonswap/gpt@latest
+          tags: gonswap/gpt:latest
