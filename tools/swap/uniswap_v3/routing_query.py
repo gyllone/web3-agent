@@ -1,14 +1,14 @@
 import httpx
-from httpx import AsyncClient
-from typing import Dict, Literal
 
+from httpx import AsyncClient
+from typing import LiteralString, Dict
 from pydantic import BaseModel, Field
 from langchain.agents import Tool
 
-from executor.base import ToolMaker
+from tools.maker import ToolMaker
 
 
-class RoutingQueryArgs(BaseModel):
+class RoutingQueryArguments(BaseModel):
     token_in_chain_id: int = Field(description="Chain ID of the token to swap in.")
     token_in_address: str = Field(description="Address of the token to swap in.")
     token_out_chain_id: int = Field(description="Chain ID of the token to swap out.")
@@ -44,31 +44,35 @@ class RoutingResponse(BaseModel):
 
 
 class RoutingQuerier(ToolMaker):
-    """Query routing information from the routing service."""
 
     base_url: str
 
-    name: Literal["routing_querier"] = "routing_querier"
+    @classmethod
+    def name(cls) -> LiteralString:
+        return "routing_querier"
 
-    def query(self, req: RoutingQueryArgs) -> RoutingResponse:
+    @classmethod
+    def description(cls) -> LiteralString:
+        return "Query routing information from the routing service"
+
+    def query(self, req: RoutingQueryArguments) -> RoutingResponse:
         """Query routing information from the routing service."""
         resp = httpx.get(self.base_url, params=req.to_params())
         return RoutingResponse.parse_obj(resp.json())
 
-    async def async_query(self, req: RoutingQueryArgs) -> RoutingResponse:
+    async def async_query(self, req: RoutingQueryArguments) -> RoutingResponse:
         """Query routing information from the routing service."""
         async with AsyncClient() as client:
             resp = await client.get(self.base_url, params=req.dict())
         return RoutingResponse.parse_obj(resp.json())
 
-    @classmethod
-    def make_tool(cls, **kwargs) -> Tool:
+    def make_tool(self, **kwargs) -> Tool:
         """Create a tool for querying routing information."""
         return Tool.from_function(
-            cls.query,
-            cls.name,
-            cls.__doc__,
-            args_schema=RoutingQueryArgs,
-            coroutine=cls.async_query,
+            self.query,
+            self.name(),
+            self.description(),
+            args_schema=RoutingQueryArguments,
+            coroutine=self.async_query,
             **kwargs,
         )
