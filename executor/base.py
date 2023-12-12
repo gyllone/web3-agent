@@ -5,6 +5,7 @@ from langchain.tools import BaseTool
 
 class ToolMaker(BaseModel):
 
+    @classmethod
     @abstractmethod
-    def make_tool(self, **kwargs) -> BaseTool:
+    def make_tool(cls, **kwargs) -> BaseTool:
         raise NotImplementedError

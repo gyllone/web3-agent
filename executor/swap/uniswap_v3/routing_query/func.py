@@ -56,7 +56,7 @@ class RoutingQuerier(ToolMaker):
 
     base_url: str
 
-    name: Literal["RoutingQuerier"] = "RoutingQuerier"
+    name: Literal["routing_querier"] = "routing_querier"
 
     def query(self, req: RoutingQueryArguments) -> RoutingResponse:
         """Query routing information from the routing service."""
@@ -69,13 +69,13 @@ class RoutingQuerier(ToolMaker):
             resp = await client.get(self.base_url, params=req.dict())
         return RoutingResponse.parse_obj(resp.json())
 
-    def make_tool(self, **kwargs) -> Tool:
+    def make_tool(cls, **kwargs) -> Tool:
         """Create a tool for querying routing information."""
         return Tool.from_function(
-            self.query,
-            self.name,
-            self.__doc__,
+            cls.query,
+            cls.name,
+            cls.__doc__,
             args_schema=RoutingQueryArguments,
-            coroutine=self.async_query,
+            coroutine=cls.async_query,
             **kwargs,
         )
