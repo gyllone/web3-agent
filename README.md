@@ -13,6 +13,7 @@ pip install fastapi
 pip install uvicorn
 pip install argparse
 pip install nest_asyncio
+pip install mypy
 pip install "redis[hiredis]"
 ```
 
