@@ -1,12 +1,29 @@
 from abc import abstractmethod
-from typing import get_args, TypeVar, Type, Generic, LiteralString, Callable, Optional, Awaitable
+from typing import get_args, Union, TypeVar, Type, Generic, LiteralString, Callable, Optional, Awaitable
 from pydantic import BaseModel
 from langchain.tools import BaseTool, Tool
-from langchain.schema.runnable import Runnable, RunnableLambda
+from langchain.callbacks.manager import CallbackManagerForChainRun, AsyncCallbackManagerForChainRun
+from langchain.schema.runnable import Runnable, RunnableConfig, RunnableLambda
 
 
 Input = TypeVar("Input", bound=BaseModel, contravariant=True)
 Output = TypeVar("Output", bound=BaseModel, covariant=True)
+
+Processor = Union[
+    Callable[[Input], Output],
+    Callable[[Input, RunnableConfig], Output],
+    Callable[[Input, CallbackManagerForChainRun], Output],
+    Callable[[Input, CallbackManagerForChainRun, RunnableConfig], Output],
+]
+AsyncProcessor = Union[
+    Callable[[Input], Awaitable[Output]],
+    Callable[[Input, RunnableConfig], Awaitable[Output]],
+    Callable[[Input, AsyncCallbackManagerForChainRun], Awaitable[Output]],
+    Callable[
+        [Input, AsyncCallbackManagerForChainRun, RunnableConfig],
+        Awaitable[Output],
+    ],
+]
 
 
 class AgentMaker(Generic[Input, Output]):
@@ -39,22 +56,22 @@ class AgentMaker(Generic[Input, Output]):
         raise TypeError(f"{cls.__name__} doesn't have an inferable output type.")
 
     @property
-    def processor(self) -> Optional[Callable[[Input], Output]]:
+    def processor(self) -> Optional[Processor]:
         return None
 
     @property
-    def async_processor(self) -> Optional[Callable[[Input], Awaitable[Output]]]:
+    def async_processor(self) -> Optional[AsyncProcessor]:
         return None
 
-    # TODO: add callback manager
-    def wrap_runnable(self, **kwargs) -> Runnable[Input, Output]:
+    @property
+    def runnable(self) -> Runnable[Input, Output]:
         if self.processor:
             return RunnableLambda(self.processor, afunc=self.async_processor)
         if self.async_processor:
-            return RunnableLambda(self.async_processor)
+            return RunnableLambda[Input, Output](self.async_processor)
         raise NotImplementedError("must define at least one process function")
 
-    def wrap_tool(self, **kwargs) -> BaseTool:
+    def tool(self, **kwargs) -> BaseTool:
         return Tool.from_function(
             self.processor,
             self.name(),
