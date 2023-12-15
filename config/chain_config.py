@@ -1,15 +1,13 @@
-import json
 from typing import Dict, List
-from os import PathLike
 from pydantic import BaseModel, Field, validator, root_validator
 from eth_utils import is_address
-from langchain.llms.openai import OpenAIChat
 
 
 class TokenMetadata(BaseModel):
     name: str
     symbol: str
     address: str
+    decimal: int
 
     @validator("address", pre=True)
     def check_address(cls, v):
@@ -28,22 +26,23 @@ class ChainMetadata(BaseModel):
 
 class ChainConfig(BaseModel):
     chain: ChainMetadata
-    """chain_id: chain metadata"""
+    """chain metadata"""
     tokens: List[TokenMetadata]
+    """tokens: list of tokens on chain"""
 
-    cache_by_symbol: Dict[str, TokenMetadata] = Field(default={}, exclude=True)
-    cache_by_address: Dict[str, TokenMetadata] = Field(default={}, exclude=True)
+    token_cache_by_symbol: Dict[str, TokenMetadata] = Field(default={}, exclude=True)  #: :meta private:
+    token_cache_by_address: Dict[str, TokenMetadata] = Field(default={}, exclude=True)  #: :meta private:
 
     @root_validator()
     def validate_environment(cls, values: Dict) -> Dict:
         """Validate token list."""
         tokens = values.get("tokens", {})
-        cache_by_symbol = {}
-        cache_by_address = {}
+        token_cache_by_symbol = {}
+        token_cache_by_address = {}
         for chain_id, token_list in tokens.items():
             for token in token_list:
-                cache_by_symbol[token.symbol] = token
-                cache_by_address[token.symbol] = token
-        values["cache_by_symbol"] = cache_by_symbol
-        values["cache_by_address"] = cache_by_address
+                token_cache_by_symbol[token.symbol] = token
+                token_cache_by_address[token.symbol] = token
+        values["token_cache_by_symbol"] = token_cache_by_symbol
+        values["token_cache_by_address"] = token_cache_by_address
         return values

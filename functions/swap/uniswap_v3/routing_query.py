@@ -4,7 +4,7 @@ from httpx import AsyncClient
 from typing import LiteralString, Dict, Optional, Callable, Awaitable
 from pydantic import BaseModel, Field
 
-from agents.maker import AgentMaker
+from functions.maker import AgentMaker
 
 
 class RoutingQueryArguments(BaseModel):
