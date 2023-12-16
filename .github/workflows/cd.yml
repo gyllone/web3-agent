@@ -1,10 +1,9 @@
-name: Publish Docker image
+name: Deploy
 
 on:
   workflow_dispatch:
   schedule:
     - cron: "0 8 * * *"
-
 
 jobs:
   deploy:
@@ -13,7 +12,7 @@ jobs:
     steps:
       - name: Run a script
         run: |
-          echo $CR_SECRET | docker login ghcr.io -u callmewhy --password-stdin
+          echo ${{ secrets.CR_SECRET }} | docker login ghcr.io -u callmewhy --password-stdin
           docker run --name gonswap-gpt ghcr.io/gonswap/gpt:latest
   clean:
     runs-on: ubuntu-latest
