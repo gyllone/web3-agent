@@ -13,7 +13,7 @@ EXPOSE 8901
 ENTRYPOINT [ \
     "conda", "run", "--no-capture-output", "-n", "tradingGPT", \
     "python", "/tradingGPT/app/run_svc.py", \
-    "--host=127.0.0.1", \
+    "--host=0.0.0.0", \
     "--port=8901", \
     "--env=dev" \
 ]
