@@ -13,7 +13,8 @@ jobs:
       - name: Run a script
         run: |
           echo ${{ secrets.CR_SECRET }} | docker login ghcr.io -u callmewhy --password-stdin
-          docker run -d --rm -p 8001:8901 --name gonswap-gpt ghcr.io/gonswap/gpt:latest
+          docker stop gonswap-gpt && docker rm gonswap-gpt
+          docker run -d -p 8001:8901 --name gonswap-gpt ghcr.io/gonswap/gpt:latest
   clean:
     runs-on: ubuntu-latest
     steps:
