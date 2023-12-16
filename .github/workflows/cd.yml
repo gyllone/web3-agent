@@ -1,0 +1,26 @@
+name: Publish Docker image
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8 * * *"
+
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, cd, dev]
+    name: Run docker image
+    steps:
+      - name: Run a script
+        run: |
+          echo $CR_SECRET | docker login ghcr.io -u callmewhy --password-stdin
+          docker run --name gonswap-gpt ghcr.io/gonswap/gpt:latest
+  clean:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/delete-package-versions@v4
+        with:
+          package-name: 'gpt'
+          package-type: 'container'
+          min-versions-to-keep: 5
+          delete-only-untagged-versions: 'true'
