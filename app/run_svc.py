@@ -14,44 +14,54 @@ from web3 import AsyncWeb3
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="gonswap-agent", description="Run the gonswap agent service.")
-    parser.add_argument("--host", type=str, default="0.0.0.0", help="host address")
-    parser.add_argument("--port", type=int, default=8901, help="port number")
-    parser.add_argument("--env", choices=["dev", "prod"], default="dev", help="environment")
+    parser.add_argument(
+        "--log-level", type=str, default="INFO", help="log level"
+    )
+    parser.add_argument(
+        "--host", type=str, default="0.0.0.0", help="host address"
+    )
+    parser.add_argument(
+        "--port", type=int, default=8901, help="port number"
+    )
+    parser.add_argument(
+        "--model-config", type=str, default=".config/model.json", help="model config file path"
+    )
+    parser.add_argument(
+        "--chain-config", type=str, default=".config/chain.json", help="chain config file path"
+    )
+
     return parser.parse_args()
 
 
 async def main():
-    args = parse_args()
-
     root_path = Path(__file__).parent.parent.as_posix()
     sys.path.append(root_path)
-
-    if args.env == "prod":
-        import settings.production as settings
-    else:
-        import settings.develop as settings
 
     from executors.chatter import Chatter
     from executors.api import register_chatter_api
     from functions.token.balance import BalanceGetter
-    from config.chain_config import ChainConfig
+    from config import ChainConfig, ModelConfig
 
+    args = parse_args()
+    model_config = ModelConfig.from_file(args.model_config)
+    chain_config = ChainConfig.from_file(args.chain_config)
+
+    # setup logging
     logging.basicConfig(
-        level=logging.getLevelName(settings.LOG_LEVEL),
+        level=logging.getLevelName(args.log),
         format="%(asctime)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    chain_config = ChainConfig.parse_file("../chain_config.json")
     web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(chain_config.chain.rpc_url))
     balance_getter = BalanceGetter(
         chain_config=chain_config,
         async_web3=web3,
     )
 
-    chat_model = ChatOpenAI(**settings.CHAT_MODEL_ARGS)
+    agent_model = ChatOpenAI(**model_config.agent_model_args.model_dump())
     chatter = Chatter(
-        model=chat_model,
+        model=agent_model,
         tools=[balance_getter.tool()],
     )
 

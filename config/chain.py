@@ -2,6 +2,8 @@ from typing import Dict, List
 from pydantic import BaseModel, Field, field_validator, model_validator
 from eth_utils import is_address
 
+from config.base import BaseConfig
+
 
 class TokenMetadata(BaseModel):
     name: str
@@ -25,7 +27,7 @@ class ChainMetadata(BaseModel):
     rpc_url: str
 
 
-class ChainConfig(BaseModel):
+class ChainConfig(BaseConfig):
     chain: ChainMetadata
     """chain metadata"""
     tokens: List[TokenMetadata]

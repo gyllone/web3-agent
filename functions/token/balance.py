@@ -4,7 +4,7 @@ from web3 import Web3, AsyncWeb3
 from web3.types import ABIFunction
 from web3.utils.address import to_checksum_address
 
-from config.chain_config import ChainConfig, TokenMetadata
+from config.chain import ChainConfig, TokenMetadata
 from functions.maker import AgentMaker
 
 
