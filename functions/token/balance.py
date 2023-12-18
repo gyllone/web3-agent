@@ -1,5 +1,5 @@
 from typing import Optional, LiteralString, Callable, Awaitable
-from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel, Field
 from web3 import Web3, AsyncWeb3
 from web3.types import ABIFunction
 from web3.utils.address import to_checksum_address
@@ -82,6 +82,8 @@ class BalanceGetter(AgentMaker[BalanceArgs, BalanceResult]):
 
             return balance_of
 
+        return None
+
     @property
     def async_processor(self) -> Optional[Callable[[BalanceArgs], Awaitable[BalanceResult]]]:
         if self.async_web3:
@@ -95,3 +97,5 @@ class BalanceGetter(AgentMaker[BalanceArgs, BalanceResult]):
                 return BalanceResult(amount=balance / (10 ** token.decimals))
 
             return balance_of
+
+        return None

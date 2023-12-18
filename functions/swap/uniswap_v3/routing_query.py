@@ -2,7 +2,7 @@ import httpx
 
 from httpx import AsyncClient
 from typing import LiteralString, Dict, Optional, Callable, Awaitable
-from pydantic import BaseModel, Field
+from pydantic.v1 import BaseModel, Field
 
 from functions.maker import AgentMaker
 
