@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Any
 from pydantic import BaseModel, Field, field_validator, model_validator
 from eth_utils import is_address
 
@@ -38,14 +38,15 @@ class ChainConfig(BaseConfig):
 
     @classmethod
     @model_validator(mode="after")
-    def validate_environment(cls, values: Dict) -> Dict:
+    def validate_environment(cls, values: Any) -> Any:
         """Validate token list."""
-        tokens: List[TokenMetadata] = values.get("tokens", [])
-        token_cache_by_symbol = {}
-        token_cache_by_address = {}
-        for token in tokens:
-            token_cache_by_symbol[token.symbol] = token
-            token_cache_by_address[token.symbol] = token
-        values["token_cache_by_symbol"] = token_cache_by_symbol
-        values["token_cache_by_address"] = token_cache_by_address
+        if isinstance(values, Dict):
+            tokens: List[TokenMetadata] = values.get("tokens", [])
+            token_cache_by_symbol = {}
+            token_cache_by_address = {}
+            for token in tokens:
+                token_cache_by_symbol[token.symbol] = token
+                token_cache_by_address[token.symbol] = token
+            values["token_cache_by_symbol"] = token_cache_by_symbol
+            values["token_cache_by_address"] = token_cache_by_address
         return values

@@ -11,7 +11,7 @@ from functions.maker import AgentMaker
 class BalanceArgs(BaseModel):
     symbol: Optional[str] = Field(description="The symbol of the token")
     token: Optional[str] = Field(description="The token contract address")
-    account: Optional[str] = Field(description="The user address")
+    account: str = Field(description="The user address")
 
 
 class BalanceResult(BaseModel):
@@ -72,6 +72,7 @@ class BalanceGetter(AgentMaker[BalanceArgs, BalanceResult]):
     def processor(self) -> Optional[Callable[[BalanceArgs], BalanceResult]]:
         if self.web3:
             def balance_of(arg: BalanceArgs) -> BalanceResult:
+                assert self.web3 is not None
                 token = self._get_token(arg)
                 contract = self.web3.eth.contract(
                     address=to_checksum_address(token.address),
@@ -88,6 +89,7 @@ class BalanceGetter(AgentMaker[BalanceArgs, BalanceResult]):
     def async_processor(self) -> Optional[Callable[[BalanceArgs], Awaitable[BalanceResult]]]:
         if self.async_web3:
             async def balance_of(arg: BalanceArgs) -> BalanceResult:
+                assert self.async_web3 is not None
                 token = self._get_token(arg)
                 contract = self.async_web3.eth.contract(
                     address=to_checksum_address(token.address),
