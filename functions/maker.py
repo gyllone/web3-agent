@@ -1,13 +1,13 @@
 from abc import abstractmethod
 from typing import get_args, Union, TypeVar, Type, Generic, LiteralString, Callable, Optional, Awaitable
-from pydantic import BaseModel
+from pydantic import BaseModel, create_model
 from langchain.tools import BaseTool, Tool
 from langchain.callbacks.manager import CallbackManagerForChainRun, AsyncCallbackManagerForChainRun
 from langchain.schema.runnable import Runnable, RunnableConfig, RunnableLambda
 
 
-Input = TypeVar("Input", bound=BaseModel, contravariant=True)
-Output = TypeVar("Output", bound=BaseModel, covariant=True)
+Input = TypeVar("Input", contravariant=True)
+Output = TypeVar("Output", covariant=True)
 
 Processor = Union[
     Callable[[Input], Output],
@@ -48,12 +48,30 @@ class AgentMaker(Generic[Input, Output]):
         raise TypeError(f"{cls.__name__} doesn't have an inferable input type.")
 
     @classmethod
+    def input_schema(cls) -> Type[BaseModel]:
+        input_type = cls.input_type()
+        if issubclass(input_type, BaseModel):
+            return input_type
+        return create_model(
+            cls.__name__ + "Input", __root__=(input_type, None)
+        )
+
+    @classmethod
     def output_type(cls) -> Type[Output]:
         for c in cls.__orig_bases__:  # type: ignore[attr-defined]
             type_args = get_args(c)
             if type_args and len(type_args) == 2:
                 return type_args[1]
         raise TypeError(f"{cls.__name__} doesn't have an inferable output type.")
+
+    @classmethod
+    def output_schema(cls) -> Type[BaseModel]:
+        output_type = cls.output_type()
+        if issubclass(output_type, BaseModel):
+            return output_type
+        return create_model(
+            cls.__name__ + "Output", __root__=(output_type, None)
+        )
 
     @property
     def processor(self) -> Optional[Processor]:
