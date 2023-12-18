@@ -49,7 +49,7 @@ async def main():
 
     # setup logging
     logging.basicConfig(
-        level=logging.getLevelName(args.log),
+        level=logging.getLevelName(args.log_level),
         format="%(asctime)s - %(levelname)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
