@@ -34,6 +34,8 @@ def parse_args():
 
 
 async def main():
+    args = parse_args()
+
     root_path = Path(__file__).parent.parent.as_posix()
     sys.path.append(root_path)
 
@@ -42,9 +44,8 @@ async def main():
     from functions.token.balance import BalanceGetter
     from config import ChainConfig, ModelConfig
 
-    args = parse_args()
-    model_config = ModelConfig.from_file(args.model_config)
-    chain_config = ChainConfig.from_file(args.chain_config)
+    model_config = ModelConfig.from_file(Path(args.model_config))
+    chain_config = ChainConfig.from_file(Path(args.chain_config))
 
     # setup logging
     logging.basicConfig(
