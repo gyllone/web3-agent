@@ -78,7 +78,7 @@ class BalanceGetter(AgentMaker[BalanceArgs, BalanceResult]):
                     abi=self.abi,
                 )
                 balance = contract.functions.balanceOf(to_checksum_address(arg.account)).call()
-                return BalanceResult(amount=balance / (10 ** token.decimal))
+                return BalanceResult(amount=balance / (10 ** token.decimals))
 
             return balance_of
 
@@ -92,6 +92,6 @@ class BalanceGetter(AgentMaker[BalanceArgs, BalanceResult]):
                     abi=self.abi,
                 )
                 balance = await contract.functions.balanceOf(to_checksum_address(arg.account)).call()
-                return BalanceResult(amount=balance / (10 ** token.decimal))
+                return BalanceResult(amount=balance / (10 ** token.decimals))
 
             return balance_of
