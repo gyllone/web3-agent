@@ -9,6 +9,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.chat_models.openai import ChatOpenAI
+from web3 import AsyncWeb3
 
 
 def parse_args():
@@ -30,17 +31,30 @@ async def main():
     else:
         import settings.develop as settings
 
-    from chatter.chatter import Chatter
-    from chatter.api import register_chatter_api
+    from executors.chatter import Chatter
+    from executors.api import register_chatter_api
+    from functions.token.balance import BalanceGetter
+    from config.chain_config import ChainConfig
 
     logging.basicConfig(
         level=logging.getLevelName(settings.LOG_LEVEL),
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    chain_config = ChainConfig.parse_file("./chain_config.json")
+    infura_url = "https://mainnet.infura.io/v3/78a1d80474fe48b99e836611e2ad956f"
+    web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(infura_url))
+    balance_getter = BalanceGetter(
+        chain_config=chain_config,
+        async_web3=web3,
     )
 
     chat_model = ChatOpenAI(**settings.CHAT_MODEL_ARGS)
-    chatter = Chatter(chat_llm=chat_model)
+    chatter = Chatter(
+        model=chat_model,
+        tools=[balance_getter.tool()],
+    )
 
     # setup service
     app = FastAPI()

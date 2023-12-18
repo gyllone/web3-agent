@@ -49,10 +49,10 @@ class Chatter:
         config: Optional[RunnableConfig] = None,
     ) -> str:
         result = await self.agent.ainvoke(
-            dict(
-                input=question,
-                chat_history=self._make_chat_history(chat_history),
-            ),
+            {
+                "input": question,
+                "chat_history": self._make_chat_history(chat_history),
+            },
             config=config,
         )
         return result["output"]
