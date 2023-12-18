@@ -1,4 +1,4 @@
-name: tradingGPT
+name: gonswapGPT
 channels:
   - conda-forge
   - defaults

@@ -1,5 +1,5 @@
 from typing import Dict, List
-from pydantic import BaseModel, Field, validator, root_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from eth_utils import is_address
 
 
@@ -9,7 +9,8 @@ class TokenMetadata(BaseModel):
     address: str
     decimal: int
 
-    @validator("address", pre=True)
+    @field_validator("address")
+    @classmethod
     def check_address(cls, v):
         if is_address(v):
             return v
@@ -33,7 +34,8 @@ class ChainConfig(BaseModel):
     token_cache_by_symbol: Dict[str, TokenMetadata] = Field(default={}, exclude=True)  #: :meta private:
     token_cache_by_address: Dict[str, TokenMetadata] = Field(default={}, exclude=True)  #: :meta private:
 
-    @root_validator()
+    @model_validator(mode="before")
+    @classmethod
     def validate_environment(cls, values: Dict) -> Dict:
         """Validate token list."""
         tokens = values.get("tokens", {})
