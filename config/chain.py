@@ -9,7 +9,7 @@ class TokenMetadata(BaseModel):
     name: str
     symbol: str
     address: str
-    decimal: int
+    decimals: int
 
     @classmethod
     @field_validator("address", mode="before")
