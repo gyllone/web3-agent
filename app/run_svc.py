@@ -59,7 +59,7 @@ async def main():
         async_web3=web3,
     )
 
-    agent_model = ChatOpenAI(**model_config.agent_model_args.model_dump())
+    agent_model = ChatOpenAI(**model_config.agent_args.model_dump())
     chatter = Chatter(
         model=agent_model,
         tools=[balance_getter.tool()],

@@ -1,14 +1,14 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from config.base import BaseConfig
 
 
 class ModelArgs(BaseModel):
-    model_name: str = "gpt-4"
+    model: str = Field("gpt-4", alias="model_name")
     temperature: float = 0
     openai_api_key: str
 
 
 class ModelConfig(BaseConfig):
-    chat_model_args: ModelArgs
-    agent_model_args: ModelArgs
+    chat_args: ModelArgs
+    agent_args: ModelArgs
