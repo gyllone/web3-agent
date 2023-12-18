@@ -40,13 +40,12 @@ class ChainConfig(BaseConfig):
     @classmethod
     def validate_environment(cls, values: Dict) -> Dict:
         """Validate token list."""
-        tokens = values.get("tokens", {})
+        tokens = values.get("tokens", [])
         token_cache_by_symbol = {}
         token_cache_by_address = {}
-        for chain_id, token_list in tokens.items():
-            for token in token_list:
-                token_cache_by_symbol[token.symbol] = token
-                token_cache_by_address[token.symbol] = token
+        for token in tokens:
+            token_cache_by_symbol[token.symbol] = token
+            token_cache_by_address[token.symbol] = token
         values["token_cache_by_symbol"] = token_cache_by_symbol
         values["token_cache_by_address"] = token_cache_by_address
         return values
