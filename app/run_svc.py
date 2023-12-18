@@ -42,9 +42,8 @@ async def main():
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    chain_config = ChainConfig.parse_file("./chain_config.json")
-    infura_url = "https://mainnet.infura.io/v3/78a1d80474fe48b99e836611e2ad956f"
-    web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(infura_url))
+    chain_config = ChainConfig.parse_file("../chain_config.json")
+    web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(chain_config.chain.rpc_url))
     balance_getter = BalanceGetter(
         chain_config=chain_config,
         async_web3=web3,

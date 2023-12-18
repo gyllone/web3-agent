@@ -1,0 +1,40 @@
+{
+  "chain": {
+    "chain_id": 195,
+    "name": "x1-testnet",
+    "native_coin_symbol": "OKB",
+    "rpc_url": "http://localhost:26657"
+  },
+  "tokens": [
+    {
+      "name": "Wrapped OKB",
+      "symbol": "WOKB",
+      "address": "0xFFBDBfafC5369d699C45fDac506D4138570D32A3",
+      "decimals": 18
+    },
+    {
+      "name": "Tether USD",
+      "symbol": "USDT",
+      "address": "0x162Ea059C8888BFD5d6398d0380adeb371e265AA",
+      "decimals": 6
+    },
+    {
+      "name": "Circle USD",
+      "symbol": "USDC",
+      "address": "0x64A122bcc24e5Ce92eE9043C93D25B6563F3874a",
+      "decimals": 6
+    },
+    {
+      "name": "Wrapped BTC",
+      "symbol": "WBTC",
+      "address": "0x41625efc27e0A54a76F976228002e1Dd6bC911be",
+      "decimals": 18
+    },
+    {
+      "name": "Wrapped ETH",
+      "symbol": "WETH",
+      "address": "0x9455d2bff38847efc60a426E87B10ff29f1341D1",
+      "decimals": 18
+    }
+  ]
+}
