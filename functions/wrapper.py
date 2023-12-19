@@ -102,7 +102,7 @@ class FunctionWrapper(Generic[Input, Output]):
                 for name, param in signature(self.async_function).parameters.items()
             }
             if input_fields != func_params:
-                raise TypeError("input fields and function parameters don't match")
+                raise TypeError(f"input fields {input_fields} and function parameters {func_params} don't match")
         return self.async_function
 
     @property
