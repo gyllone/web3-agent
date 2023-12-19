@@ -9,13 +9,28 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.chat_models.openai import ChatOpenAI
+from langchain.globals import set_debug
+from web3 import AsyncWeb3
 
 
 def parse_args():
     parser = argparse.ArgumentParser(prog="gonswap-agent", description="Run the gonswap agent service.")
-    parser.add_argument("--host", type=str, default="0.0.0.0", help="host address")
-    parser.add_argument("--port", type=int, default=8901, help="port number")
-    parser.add_argument("--env", choices=["dev", "prod"], default="dev", help="environment")
+    parser.add_argument(
+        "--log-level", type=str, default="INFO", help="log level"
+    )
+    parser.add_argument(
+        "--host", type=str, default="0.0.0.0", help="host address"
+    )
+    parser.add_argument(
+        "--port", type=int, default=8901, help="port number"
+    )
+    parser.add_argument(
+        "--model-config", type=str, default=".config/model.json", help="model config file path"
+    )
+    parser.add_argument(
+        "--chain-config", type=str, default=".config/chain.json", help="chain config file path"
+    )
+
     return parser.parse_args()
 
 
@@ -25,22 +40,34 @@ async def main():
     root_path = Path(__file__).parent.parent.as_posix()
     sys.path.append(root_path)
 
-    if args.env == "prod":
-        import settings.production as settings
-    else:
-        import settings.develop as settings
+    from executors.chatter import Chatter
+    from executors.api import register_chatter_api
+    from functions.token.balance import BalanceGetter
+    from config import ChainConfig, ModelConfig
 
-    from chatter.chatter import Chatter
-    from chatter.api import register_chatter_api
+    model_config = ModelConfig.from_file(Path(args.model_config))
+    chain_config = ChainConfig.from_file(Path(args.chain_config))
 
+    # setup logging
     logging.basicConfig(
-        level=logging.getLevelName(settings.LOG_LEVEL),
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
+        level=logging.getLevelName(args.log_level),
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    chat_model = ChatOpenAI(**settings.CHAT_MODEL_ARGS)
-    chatter = Chatter(chat_llm=chat_model)
+    web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(chain_config.chain.rpc_url))
+    balance_getter = BalanceGetter(
+        chain_config=chain_config,
+        async_web3=web3,
+    )
+
+    set_debug(True)
+
+    agent_model = ChatOpenAI(**model_config.agent_args.model_dump())
+    chatter = Chatter(
+        model=agent_model,
+        tools=[balance_getter.tool()],
+    )
 
     # setup service
     app = FastAPI()

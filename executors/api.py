@@ -5,7 +5,7 @@ from fastapi import APIRouter, Body
 from fastapi.responses import StreamingResponse
 
 from common.callbacks.stream_handler import StreamingCallbackHandler
-from chatter.chatter import Chatter
+from executors.chatter import Chatter
 
 
 def register_chatter_api(chatter: Chatter) -> APIRouter:
@@ -23,15 +23,16 @@ def register_chatter_api(chatter: Chatter) -> APIRouter:
                 await chatter.chat(
                     question,
                     chat_history,
-                    stream_handler=stream_handler,
+                    config={
+                        "callbacks": [stream_handler]
+                    }
                 )
-                # await stream_handler.send_metadata(answer)
             except Exception as e:
                 await stream_handler.send_error(repr(e))
             finally:
                 await stream_handler.stop()
 
-        asyncio.create_task(_chatting())
+        _ = asyncio.create_task(_chatting())
         return StreamingResponse(
             stream_handler,
             media_type='text/event-stream',

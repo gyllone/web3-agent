@@ -1,5 +1,5 @@
 from asyncio import Queue
-from typing import Any, Optional, Union, List
+from typing import Any, Optional, List
 from uuid import UUID
 from pydantic import BaseModel
 from langchain.callbacks.base import AsyncCallbackHandler
@@ -21,7 +21,7 @@ class StreamingCallbackHandler(AsyncCallbackHandler):
 
     @staticmethod
     def _frame(data: StreamingResponse) -> str:
-        return "data: " + data.json() + "\n\n"
+        return "data: " + data.model_dump_json() + "\n\n"
 
     async def __anext__(self):
         data = await self._queue.get()
@@ -55,11 +55,11 @@ class StreamingCallbackHandler(AsyncCallbackHandler):
 
     async def on_llm_error(
         self,
-        error: Union[Exception, KeyboardInterrupt],
+        error: BaseException,
         *,
         run_id: UUID,
         parent_run_id: Optional[UUID] = None,
         tags: Optional[List[str]] = None,
         **kwargs: Any,
     ) -> None:
-        await self._queue.put(StreamingResponse(status=False, error=f"LLM error: {repr(error)}"))
+        await self._queue.put(StreamingResponse(status=False, error=f"LLM error: {error}"))
