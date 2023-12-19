@@ -9,9 +9,9 @@ from functions.wrapper import FunctionWrapper
 
 
 class BalanceArgs(BaseModel):
-    symbol: Optional[str] = Field(description="The symbol of the token")
-    token: Optional[str] = Field(description="The token contract address")
     account: str = Field(description="The user address")
+    symbol: Optional[str] = Field(None, description="The symbol of the token")
+    token: Optional[str] = Field(None, description="The token contract address")
 
 
 class BalanceResult(BaseModel):
@@ -71,7 +71,9 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
     @property
     def function(self) -> Optional[Callable[..., BalanceResult]]:
         if self.web3:
-            def _balance_of(*, symbol: Optional[str], token: Optional[str], account: str) -> BalanceResult:
+            def _balance_of(
+                account: str, symbol: Optional[str] = None, token: Optional[str] = None
+            ) -> BalanceResult:
                 assert self.web3 is not None
                 token_metadata = self._get_token(symbol, token)
                 contract = self.web3.eth.contract(
@@ -88,7 +90,9 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
     @property
     def async_function(self) -> Optional[Callable[..., Awaitable[BalanceResult]]]:
         if self.async_web3:
-            async def _balance_of(*, symbol: Optional[str], token: Optional[str], account: str) -> BalanceResult:
+            async def _balance_of(
+                account: str, symbol: Optional[str] = None, token: Optional[str] = None
+            ) -> BalanceResult:
                 assert self.async_web3 is not None
                 token_metadata = self._get_token(symbol, token)
                 contract = self.async_web3.eth.contract(

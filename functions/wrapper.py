@@ -1,3 +1,4 @@
+from inspect import signature
 from abc import abstractmethod
 from typing import get_args, Union, TypeVar, Type, Generic, LiteralString, Callable, Optional, Awaitable
 from pydantic.v1 import BaseModel
@@ -70,10 +71,32 @@ class FunctionWrapper(Generic[Input, Output]):
 
     @property
     def tool_func(self) -> Optional[ToolFunc]:
+        if self.function:
+            input_fields = {
+                name: (field.annotation, field.default)
+                for name, field in self.input_type().__fields__.items()
+            }
+            func_params = {
+                name: (param.annotation, param.default)
+                for name, param in signature(self.function).parameters.items()
+            }
+            if input_fields != func_params:
+                raise TypeError("input fields and function parameters don't match")
         return self.function
 
     @property
     def async_tool_func(self) -> Optional[AsyncToolFunc]:
+        if self.async_function:
+            input_fields = {
+                name: (field.annotation, field.default)
+                for name, field in self.input_type().__fields__.items()
+            }
+            func_params = {
+                name: (param.annotation, param.default)
+                for name, param in signature(self.async_function).parameters.items()
+            }
+            if input_fields != func_params:
+                raise TypeError("input fields and function parameters don't match")
         return self.async_function
 
     @property
