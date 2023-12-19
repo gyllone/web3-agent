@@ -71,7 +71,7 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
     @property
     def function(self) -> Optional[Callable[..., BalanceResult]]:
         if self.web3:
-            def _balance_of(symbol: Optional[str], token: Optional[str], account: str) -> BalanceResult:
+            def _balance_of(*, symbol: Optional[str], token: Optional[str], account: str) -> BalanceResult:
                 assert self.web3 is not None
                 token_metadata = self._get_token(symbol, token)
                 contract = self.web3.eth.contract(
@@ -88,7 +88,7 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
     @property
     def async_function(self) -> Optional[Callable[..., Awaitable[BalanceResult]]]:
         if self.async_web3:
-            async def _balance_of(symbol: Optional[str], token: Optional[str], account: str) -> BalanceResult:
+            async def _balance_of(*, symbol: Optional[str], token: Optional[str], account: str) -> BalanceResult:
                 assert self.async_web3 is not None
                 token_metadata = self._get_token(symbol, token)
                 contract = self.async_web3.eth.contract(
