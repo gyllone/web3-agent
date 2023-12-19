@@ -11,8 +11,8 @@ class TokenMetadata(BaseModel):
     address: str
     decimals: int
 
-    @classmethod
     @field_validator("address", mode="before")
+    @classmethod
     def check_address(cls, v):
         if is_address(v):
             return v
@@ -36,14 +36,11 @@ class ChainConfig(BaseConfig):
     token_cache_by_symbol: Dict[str, TokenMetadata] = Field(default={}, exclude=True)  #: :meta private:
     token_cache_by_address: Dict[str, TokenMetadata] = Field(default={}, exclude=True)  #: :meta private:
 
-    @classmethod
     @model_validator(mode="after")
-    def validate_environment(cls, **values) -> Any:
+    @classmethod
+    def validate_environment(cls, value: "ChainConfig") -> Any:
         """Validate token list."""
-        tokens = values["tokens"]
-        token_cache_by_symbol = values["token_cache_by_symbol"]
-        token_cache_by_address = values["token_cache_by_address"]
-        for token in tokens:
-            token_cache_by_symbol[token.symbol] = token
-            token_cache_by_address[token.address] = token
-        return values
+        for token in value.tokens:
+            value.token_cache_by_symbol[token.symbol] = token
+            value.token_cache_by_address[token.address] = token
+        return value
