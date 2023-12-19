@@ -5,7 +5,7 @@ from web3.types import ABIFunction
 from web3.utils.address import to_checksum_address
 
 from config.chain import ChainConfig, TokenMetadata
-from functions.maker import AgentMaker
+from functions.wrapper import FunctionWrapper
 
 
 class BalanceArgs(BaseModel):
@@ -18,7 +18,7 @@ class BalanceResult(BaseModel):
     amount: float
 
 
-class BalanceGetter(AgentMaker[BalanceArgs, BalanceResult]):
+class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
     chain_config: ChainConfig
     web3: Optional[Web3]
     async_web3: Optional[AsyncWeb3]
@@ -69,7 +69,7 @@ class BalanceGetter(AgentMaker[BalanceArgs, BalanceResult]):
             raise ValueError("Either symbol or token address must be provided")
 
     @property
-    def processor(self) -> Optional[Callable[[BalanceArgs], BalanceResult]]:
+    def function(self) -> Optional[Callable[[BalanceArgs], BalanceResult]]:
         if self.web3:
             def balance_of(arg: BalanceArgs) -> BalanceResult:
                 assert self.web3 is not None
@@ -82,11 +82,11 @@ class BalanceGetter(AgentMaker[BalanceArgs, BalanceResult]):
                 return BalanceResult(amount=balance / (10 ** token.decimals))
 
             return balance_of
-
-        return None
+        else:
+            return None
 
     @property
-    def async_processor(self) -> Optional[Callable[[BalanceArgs], Awaitable[BalanceResult]]]:
+    def async_function(self) -> Optional[Callable[[BalanceArgs], Awaitable[BalanceResult]]]:
         if self.async_web3:
             async def balance_of(arg: BalanceArgs) -> BalanceResult:
                 assert self.async_web3 is not None
@@ -99,5 +99,5 @@ class BalanceGetter(AgentMaker[BalanceArgs, BalanceResult]):
                 return BalanceResult(amount=balance / (10 ** token.decimals))
 
             return balance_of
-
-        return None
+        else:
+            return None

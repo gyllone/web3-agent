@@ -4,7 +4,7 @@ from httpx import AsyncClient
 from typing import LiteralString, Dict, Optional, Callable, Awaitable
 from pydantic.v1 import BaseModel, Field
 
-from functions.maker import AgentMaker
+from functions.wrapper import FunctionWrapper
 
 
 class RoutingQueryArguments(BaseModel):
@@ -42,7 +42,7 @@ class RoutingResponse(BaseModel):
     routing: str = Field(alias="routeString", description="Routing string")
 
 
-class RoutingQuerier(AgentMaker[RoutingQueryArguments, RoutingResponse]):
+class RoutingQuerier(FunctionWrapper[RoutingQueryArguments, RoutingResponse]):
     """Query routing information from the routing service."""
 
     base_url: str
@@ -59,7 +59,7 @@ class RoutingQuerier(AgentMaker[RoutingQueryArguments, RoutingResponse]):
         return "Query routing information from the routing service"
 
     @property
-    def processor(self) -> Optional[Callable[[RoutingQueryArguments], RoutingResponse]]:
+    def function(self) -> Optional[Callable[[RoutingQueryArguments], RoutingResponse]]:
         def process(req: RoutingQueryArguments) -> RoutingResponse:
             """Query routing information from the routing service."""
             resp = httpx.get(self.base_url, params=req.to_params())
@@ -67,7 +67,7 @@ class RoutingQuerier(AgentMaker[RoutingQueryArguments, RoutingResponse]):
         return process
 
     @property
-    def async_processor(self) -> Optional[Callable[[RoutingQueryArguments], Awaitable[RoutingResponse]]]:
+    def async_function(self) -> Optional[Callable[[RoutingQueryArguments], Awaitable[RoutingResponse]]]:
         async def process(req: RoutingQueryArguments) -> RoutingResponse:
             """Query routing information from the routing service."""
             async with AsyncClient() as client:
