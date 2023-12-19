@@ -46,7 +46,7 @@ class ChainConfig(BaseConfig):
             token_cache_by_address = {}
             for token in tokens:
                 token_cache_by_symbol[token.symbol] = token
-                token_cache_by_address[token.symbol] = token
+                token_cache_by_address[token.address] = token
             values["token_cache_by_symbol"] = token_cache_by_symbol
             values["token_cache_by_address"] = token_cache_by_address
         return values
