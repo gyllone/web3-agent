@@ -1,7 +1,7 @@
 from typing import Optional, LiteralString, Callable, Awaitable
 from pydantic.v1 import BaseModel, Field
 from web3 import Web3, AsyncWeb3
-from web3.types import ABIFunction
+from web3.types import ABI
 from web3.utils.address import to_checksum_address
 
 from config.chain import ChainConfig, TokenMetadata
@@ -23,13 +23,15 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
     web3: Optional[Web3]
     async_web3: Optional[AsyncWeb3]
 
-    abi: ABIFunction = {
-        "inputs": [{"name": "account", "type": "address"}],
-        "name": "balanceOf",
-        "outputs": [{"name": "balance", "type": "uint256"}],
-        "stateMutability": "view",
-        "type": "function"
-    }
+    abi: ABI = [
+        {
+            "inputs": [{"name": "account", "type": "address"}],
+            "name": "balanceOf",
+            "outputs": [{"name": "balance", "type": "uint256"}],
+            "stateMutability": "view",
+            "type": "function"
+        }
+    ]
 
     def __init__(
         self,
