@@ -54,50 +54,50 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
     def description(cls) -> LiteralString:
         return "useful for when you get token balance for some address"
 
-    def _get_token(self, arg: BalanceArgs) -> TokenMetadata:
-        if arg.symbol is not None:
-            if arg.symbol in self.chain_config.token_cache_by_symbol:
-                return self.chain_config.token_cache_by_symbol[arg.symbol]
+    def _get_token(self, symbol: Optional[str], token: Optional[str]) -> TokenMetadata:
+        if symbol is not None:
+            if symbol in self.chain_config.token_cache_by_symbol:
+                return self.chain_config.token_cache_by_symbol[symbol]
             else:
-                raise ValueError(f"{arg.symbol} not found in token list")
-        elif arg.token is not None:
-            if arg.token in self.chain_config.token_cache_by_address:
-                return self.chain_config.token_cache_by_address[arg.token]
+                raise ValueError(f"{symbol} not found in token list")
+        elif token is not None:
+            if token in self.chain_config.token_cache_by_address:
+                return self.chain_config.token_cache_by_address[token]
             else:
-                raise ValueError(f"{arg.token} not found in token list")
+                raise ValueError(f"{token} not found in token list")
         else:
             raise ValueError("Either symbol or token address must be provided")
 
     @property
-    def function(self) -> Optional[Callable[[BalanceArgs], BalanceResult]]:
+    def function(self) -> Optional[Callable[..., BalanceResult]]:
         if self.web3:
-            def balance_of(arg: BalanceArgs) -> BalanceResult:
+            def _balance_of(symbol: Optional[str], token: Optional[str], account: str) -> BalanceResult:
                 assert self.web3 is not None
-                token = self._get_token(arg)
+                token_metadata = self._get_token(symbol, token)
                 contract = self.web3.eth.contract(
-                    address=to_checksum_address(token.address),
+                    address=to_checksum_address(token_metadata.address),
                     abi=self.abi,
                 )
-                balance = contract.functions.balanceOf(to_checksum_address(arg.account)).call()
-                return BalanceResult(amount=balance / (10 ** token.decimals))
+                balance = contract.functions.balanceOf(to_checksum_address(account)).call()
+                return BalanceResult(amount=balance / (10 ** token_metadata.decimals))
 
-            return balance_of
+            return _balance_of
         else:
             return None
 
     @property
-    def async_function(self) -> Optional[Callable[[BalanceArgs], Awaitable[BalanceResult]]]:
+    def async_function(self) -> Optional[Callable[..., Awaitable[BalanceResult]]]:
         if self.async_web3:
-            async def balance_of(arg: BalanceArgs) -> BalanceResult:
+            async def _balance_of(symbol: Optional[str], token: Optional[str], account: str) -> BalanceResult:
                 assert self.async_web3 is not None
-                token = self._get_token(arg)
+                token_metadata = self._get_token(symbol, token)
                 contract = self.async_web3.eth.contract(
-                    address=to_checksum_address(token.address),
+                    address=to_checksum_address(token_metadata.address),
                     abi=self.abi,
                 )
-                balance = await contract.functions.balanceOf(to_checksum_address(arg.account)).call()
-                return BalanceResult(amount=balance / (10 ** token.decimals))
+                balance = await contract.functions.balanceOf(to_checksum_address(account)).call()
+                return BalanceResult(amount=balance / (10 ** token_metadata.decimals))
 
-            return balance_of
+            return _balance_of
         else:
             return None

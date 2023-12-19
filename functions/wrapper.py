@@ -1,6 +1,4 @@
-import inspect
 from abc import abstractmethod
-from inspect import signature
 from typing import get_args, Union, TypeVar, Type, Generic, LiteralString, Callable, Optional, Awaitable
 from pydantic.v1 import BaseModel
 from langchain.tools import BaseTool, StructuredTool
@@ -63,72 +61,54 @@ class FunctionWrapper(Generic[Input, Output]):
         raise TypeError(f"{cls.__name__} doesn't have an inferable output type.")
 
     @property
-    def function(self) -> Optional[Callable[[Input], Output]]:
+    def function(self) -> Optional[Callable[..., Output]]:
         return None
 
     @property
-    def async_function(self) -> Optional[Callable[[Input], Awaitable[Output]]]:
+    def async_function(self) -> Optional[Callable[..., Awaitable[Output]]]:
         return None
 
     @property
-    def _runnable_func(self) -> Optional[RunnableFunc]:
+    def tool_func(self) -> Optional[ToolFunc]:
         return self.function
 
     @property
-    def _async_runnable_func(self) -> Optional[AsyncRunnableFunc]:
+    def async_tool_func(self) -> Optional[AsyncToolFunc]:
         return self.async_function
 
     @property
-    def _tool_func(self) -> Optional[ToolFunc]:
+    def runnable_func(self) -> Optional[RunnableFunc]:
         if self.function:
-            params = list(signature(self.function).parameters.values())
-            param = params[0]
-            assert inspect.isclass(param.annotation)
-            fields = param.annotation.__fields__.keys()
-
-            def _func(*args) -> Output:
-                if len(args) != len(fields):
-                    raise ValueError(f"Expected {len(fields)} args, got {len(args)}")
-                _input = param.annotation(**dict(zip(fields, args)))
+            def _func(_input: Input) -> Output:
                 assert self.function is not None
-                return self.function(_input)
-
+                return self.function(**_input.dict())
             return _func
         else:
             return None
 
     @property
-    def _async_tool_func(self) -> Optional[AsyncToolFunc]:
+    def async_runnable_func(self) -> Optional[AsyncRunnableFunc]:
         if self.async_function:
-            params = list(signature(self.async_function).parameters.values())
-            param = params[0]
-            assert inspect.isclass(param.annotation)
-            fields = param.annotation.__fields__.keys()
-
-            async def _async_func(*args) -> Output:
-                if len(args) != len(fields):
-                    raise ValueError(f"Expected {len(fields)} args, got {len(args)}")
-                _input = param.annotation(**dict(zip(fields, args)))
+            async def _async_func(_input: Input) -> Output:
                 assert self.async_function is not None
-                return await self.async_function(_input)
-
+                return await self.async_function(**_input.dict())
             return _async_func
         else:
             return None
 
     @property
     def runnable(self) -> Runnable[Input, Output]:
-        if self._runnable_func:
-            return RunnableLambda(self._runnable_func, afunc=self._async_runnable_func)
-        elif self._async_runnable_func:
-            return RunnableLambda[Input, Output](self._async_runnable_func)
+        if self.runnable_func:
+            return RunnableLambda(self.runnable_func, afunc=self.async_runnable_func)
+        elif self.async_runnable_func:
+            return RunnableLambda[Input, Output](self.async_runnable_func)
         else:
             raise NotImplementedError("must define at least one process function")
 
     def tool(self, **kwargs) -> BaseTool:
         return StructuredTool.from_function(
-            func=self._tool_func,
-            coroutine=self._async_tool_func,
+            func=self.tool_func,
+            coroutine=self.async_tool_func,
             name=self.name(),
             description=self.description(),
             args_schema=self.input_type(),
