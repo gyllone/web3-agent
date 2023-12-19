@@ -19,7 +19,7 @@ class Chatter:
     ):
         chat_history = MessagesPlaceholder(variable_name="chat_history")
         system_message = SystemMessage(
-            content="You are an assistant of Gonswap, a decentralized exchange on the X1 network. Your "
+            content="You are an assistant of Gonswap, which is a DEX on the X1 network. Your "
                     "main job is to answer the user's question."
         )
         agent = OpenAIFunctionsAgent.from_llm_and_tools(

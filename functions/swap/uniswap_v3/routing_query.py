@@ -1,13 +1,13 @@
 import httpx
 
 from httpx import AsyncClient
-from typing import LiteralString, Dict, Optional, Callable, Awaitable
+from typing import LiteralString, Optional, Callable, Awaitable
 from pydantic.v1 import BaseModel, Field
 
 from functions.wrapper import FunctionWrapper
 
 
-class RoutingQueryArguments(BaseModel):
+class RoutingQueryArgs(BaseModel):
     token_in_chain_id: int = Field(description="Chain ID of the token to swap in.")
     token_in_address: str = Field(description="Address of the token to swap in.")
     token_out_chain_id: int = Field(description="Chain ID of the token to swap out.")
@@ -17,19 +17,6 @@ class RoutingQueryArguments(BaseModel):
     recipient: str = Field(description="Recipient of the swap.")
     protocols: str = Field("v3", description="Protocols to use.")
     enable_universal_router: bool = Field(False, alias="enableUniversalRouter", description="Enable universal router.")
-
-    def to_params(self) -> Dict:
-        return {
-            "tokenInChainId": self.token_in_chain_id,
-            "tokenInAddress": self.token_in_address,
-            "tokenOutChainId": self.token_out_chain_id,
-            "tokenOutAddress": self.token_out_address,
-            "amount": self.amount,
-            "type": self.type,
-            "recipient": self.recipient,
-            "protocols": self.protocols,
-            "enableUniversalRouter": self.enable_universal_router,
-        }
 
 
 class RoutingResponse(BaseModel):
@@ -42,12 +29,13 @@ class RoutingResponse(BaseModel):
     routing: str = Field(alias="routeString", description="Routing string")
 
 
-class RoutingQuerier(FunctionWrapper[RoutingQueryArguments, RoutingResponse]):
+class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResponse]):
     """Query routing information from the routing service."""
 
     base_url: str
 
     def __init__(self, *, base_url: str):
+        super().__init__()
         self.base_url = base_url
 
     @classmethod
@@ -59,18 +47,66 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArguments, RoutingResponse]):
         return "Query routing information from the routing service"
 
     @property
-    def function(self) -> Optional[Callable[[RoutingQueryArguments], RoutingResponse]]:
-        def process(req: RoutingQueryArguments) -> RoutingResponse:
+    def tool_func(self) -> Optional[Callable[..., RoutingResponse]]:
+        def _query_routing(
+            token_in_chain_id: int,
+            token_in_address: str,
+            token_out_chain_id: int,
+            token_out_address: str,
+            amount: int,
+            type: str,
+            recipient: str,
+            protocols: str = "v3",
+            enable_universal_router: bool = False,
+        ) -> RoutingResponse:
             """Query routing information from the routing service."""
-            resp = httpx.get(self.base_url, params=req.to_params())
+            resp = httpx.get(
+                self.base_url,
+                params={
+                    "tokenInChainId": token_in_chain_id,
+                    "tokenInAddress": token_in_address,
+                    "tokenOutChainId": token_out_chain_id,
+                    "tokenOutAddress": token_out_address,
+                    "amount": amount,
+                    "type": type,
+                    "recipient": recipient,
+                    "protocols": protocols,
+                    "enableUniversalRouter": enable_universal_router,
+                },
+            )
             return RoutingResponse.parse_obj(resp.json())
-        return process
+
+        return _query_routing
 
     @property
-    def async_function(self) -> Optional[Callable[[RoutingQueryArguments], Awaitable[RoutingResponse]]]:
-        async def process(req: RoutingQueryArguments) -> RoutingResponse:
+    def async_tool_func(self) -> Optional[Callable[..., Awaitable[RoutingResponse]]]:
+        async def _query_routing(
+            token_in_chain_id: int,
+            token_in_address: str,
+            token_out_chain_id: int,
+            token_out_address: str,
+            amount: int,
+            type: str,
+            recipient: str,
+            protocols: str = "v3",
+            enable_universal_router: bool = False,
+        ) -> RoutingResponse:
             """Query routing information from the routing service."""
             async with AsyncClient() as client:
-                resp = await client.get(self.base_url, params=req.dict())
-            return RoutingResponse.parse_obj(resp.json())
-        return process
+                resp = await client.get(
+                    self.base_url,
+                    params={
+                        "tokenInChainId": token_in_chain_id,
+                        "tokenInAddress": token_in_address,
+                        "tokenOutChainId": token_out_chain_id,
+                        "tokenOutAddress": token_out_address,
+                        "amount": amount,
+                        "type": type,
+                        "recipient": recipient,
+                        "protocols": protocols,
+                        "enableUniversalRouter": enable_universal_router,
+                    },
+                )
+                return RoutingResponse.parse_obj(resp.json())
+
+        return _query_routing

@@ -14,11 +14,7 @@ class BalanceArgs(BaseModel):
     token_contract: Optional[str] = Field(None, description="The token contract address of the token")
 
 
-class BalanceResult(BaseModel):
-    amount: float
-
-
-class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
+class BalanceGetter(FunctionWrapper[BalanceArgs, float]):
     chain_config: ChainConfig
     web3: Optional[Web3]
     async_web3: Optional[AsyncWeb3]
@@ -40,6 +36,7 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
         web3: Optional[Web3] = None,
         async_web3: Optional[AsyncWeb3] = None,
     ):
+        super().__init__()
         if not web3 and not async_web3:
             raise ValueError("Either web3 or async_web3 must be provided")
         self.chain_config = chain_config
@@ -69,13 +66,13 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
             raise ValueError("Either token symbol or token address must be provided")
 
     @property
-    def function(self) -> Optional[Callable[..., BalanceResult]]:
+    def tool_func(self) -> Optional[Callable[..., float]]:
         if self.web3:
             def _balance_of(
                 account: str,
                 token_symbol: Optional[str] = None,
                 token_contract: Optional[str] = None,
-            ) -> BalanceResult:
+            ) -> float:
                 assert self.web3 is not None
                 token = self._get_token(token_symbol, token_contract)
                 contract = self.web3.eth.contract(
@@ -83,20 +80,20 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
                     abi=self.abi,
                 )
                 balance = contract.functions.balanceOf(to_checksum_address(account)).call()
-                return BalanceResult(amount=balance / (10 ** token.decimals))
+                return balance / (10 ** token.decimals)
 
             return _balance_of
         else:
             return None
 
     @property
-    def async_function(self) -> Optional[Callable[..., Awaitable[BalanceResult]]]:
+    def async_tool_func(self) -> Optional[Callable[..., Awaitable[float]]]:
         if self.async_web3:
             async def _balance_of(
                 account: str,
                 token_symbol: Optional[str] = None,
                 token_contract: Optional[str] = None,
-            ) -> BalanceResult:
+            ) -> float:
                 assert self.async_web3 is not None
                 token = self._get_token(token_symbol, token_contract)
                 contract = self.async_web3.eth.contract(
@@ -104,7 +101,7 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
                     abi=self.abi,
                 )
                 balance = await contract.functions.balanceOf(to_checksum_address(account)).call()
-                return BalanceResult(amount=balance / (10 ** token.decimals))
+                return balance / (10 ** token.decimals)
 
             return _balance_of
         else:

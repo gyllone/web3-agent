@@ -8,7 +8,8 @@ from langchain.schema.runnable import Runnable, RunnableConfig, RunnableLambda
 
 
 Input = TypeVar("Input", bound=BaseModel, contravariant=True)
-Output = TypeVar("Output", bound=BaseModel, covariant=True)
+Output = TypeVar("Output", covariant=True)
+
 
 RunnableFunc = Union[
     Callable[[Input], Output],
@@ -26,6 +27,7 @@ AsyncRunnableFunc = Union[
     ],
 ]
 
+# tool function returns a json string dumped from Output
 ToolFunc = Callable[..., Output]
 AsyncToolFunc = Callable[..., Awaitable[Output]]
 
@@ -33,15 +35,36 @@ AsyncToolFunc = Callable[..., Awaitable[Output]]
 class FunctionWrapper(Generic[Input, Output]):
     """A wrapper which wraps a function to either a runnable or a tool."""
 
+    def __init__(self):
+        if self.tool_func:
+            self._validate_tool_func(self.tool_func)
+        if self.async_tool_func:
+            self._validate_tool_func(self.async_tool_func)
+        if not self.tool_func and not self.async_tool_func:
+            raise NotImplementedError("must define at least one process function")
+
+    @classmethod
+    def _validate_tool_func(cls, func: Callable):
+        input_fields = {
+            name: (field.annotation, field.default)
+            for name, field in cls.input_type().__fields__.items()
+        }
+        func_params = {
+            name: (param.annotation, param.default if param.default is not Signature.empty else None)
+            for name, param in signature(func).parameters.items()
+        }
+        if input_fields != func_params:
+            raise TypeError(f"input fields {input_fields} and function parameters {func_params} don't match")
+
     @classmethod
     @abstractmethod
     def name(cls) -> LiteralString:
-        raise NotImplementedError
+        raise NotImplementedError("must define a name")
 
     @classmethod
     @abstractmethod
     def description(cls) -> LiteralString:
-        raise NotImplementedError
+        raise NotImplementedError("must define a description")
 
     @classmethod
     def input_type(cls) -> Type[Input]:
@@ -61,67 +84,34 @@ class FunctionWrapper(Generic[Input, Output]):
         for c in cls.__orig_bases__:  # type: ignore[attr-defined]
             type_args = get_args(c)
             if type_args and len(type_args) == 2:
-                tp = type_args[1]
-                if not issubclass(tp, BaseModel):
-                    raise TypeError(f"output type {tp} must be a subclass of BaseModel")
-                return tp
+                return type_args[1]
         raise TypeError(f"{cls.__name__} doesn't have an inferable output type.")
 
     @property
-    def function(self) -> Optional[Callable[..., Output]]:
-        return None
-
-    @property
-    def async_function(self) -> Optional[Callable[..., Awaitable[Output]]]:
-        return None
-
-    @property
     def tool_func(self) -> Optional[ToolFunc]:
-        if self.function:
-            input_fields = {
-                name: (field.annotation, field.default)
-                for name, field in self.input_type().__fields__.items()
-            }
-            func_params = {
-                name: (param.annotation, param.default if param.default is not Signature.empty else None)
-                for name, param in signature(self.function).parameters.items()
-            }
-            if input_fields != func_params:
-                raise TypeError(f"input fields {input_fields} and function parameters {func_params} don't match")
-        return self.function
+        return None
 
     @property
     def async_tool_func(self) -> Optional[AsyncToolFunc]:
-        if self.async_function:
-            input_fields = {
-                name: (field.annotation, field.default)
-                for name, field in self.input_type().__fields__.items()
-            }
-            func_params = {
-                name: (param.annotation, param.default if param.default is not Signature.empty else None)
-                for name, param in signature(self.async_function).parameters.items()
-            }
-            if input_fields != func_params:
-                raise TypeError(f"input fields {input_fields} and function parameters {func_params} don't match")
-        return self.async_function
+        return None
 
     @property
     def runnable_func(self) -> Optional[RunnableFunc]:
-        if self.function:
-            def _func(_input: Input) -> Output:
-                assert self.function is not None
-                return self.function(**_input.dict())
-            return _func
+        if self.tool_func:
+            def _runnable_func(_input: Input) -> Output:
+                assert self.tool_func is not None
+                return self.tool_func(**_input.dict())
+            return _runnable_func
         else:
             return None
 
     @property
     def async_runnable_func(self) -> Optional[AsyncRunnableFunc]:
-        if self.async_function:
-            async def _async_func(_input: Input) -> Output:
-                assert self.async_function is not None
-                return await self.async_function(**_input.dict())
-            return _async_func
+        if self.async_tool_func:
+            async def _async_runnable_func(_input: Input) -> Output:
+                assert self.async_tool_func is not None
+                return await self.async_tool_func(**_input.dict())
+            return _async_runnable_func
         else:
             return None
 
