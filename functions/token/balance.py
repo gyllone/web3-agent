@@ -9,7 +9,7 @@ from functions.wrapper import FunctionWrapper
 
 
 class BalanceArgs(BaseModel):
-    account: str = Field(description="The user address")
+    user_account: str = Field(description="The user address")
     token_symbol: Optional[str] = Field(None, description="The symbol of the token")
     token_contract: Optional[str] = Field(None, description="The token contract address")
 
@@ -72,7 +72,7 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
     def function(self) -> Optional[Callable[..., BalanceResult]]:
         if self.web3:
             def _balance_of(
-                account: str,
+                user_account: str,
                 token_symbol: Optional[str] = None,
                 token_address: Optional[str] = None,
             ) -> BalanceResult:
@@ -82,7 +82,7 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
                     address=to_checksum_address(token.address),
                     abi=self.abi,
                 )
-                balance = contract.functions.balanceOf(to_checksum_address(account)).call()
+                balance = contract.functions.balanceOf(to_checksum_address(user_account)).call()
                 return BalanceResult(amount=balance / (10 ** token.decimals))
 
             return _balance_of
@@ -93,18 +93,18 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
     def async_function(self) -> Optional[Callable[..., Awaitable[BalanceResult]]]:
         if self.async_web3:
             async def _balance_of(
-                account: str,
+                user_account: str,
                 token_symbol: Optional[str] = None,
                 token_address: Optional[str] = None,
             ) -> BalanceResult:
                 assert self.async_web3 is not None
-                token_metadata = self._get_token(token_symbol, token_address)
+                token = self._get_token(token_symbol, token_address)
                 contract = self.async_web3.eth.contract(
-                    address=to_checksum_address(token_metadata.address),
+                    address=to_checksum_address(token.address),
                     abi=self.abi,
                 )
-                balance = await contract.functions.balanceOf(to_checksum_address(account)).call()
-                return BalanceResult(amount=balance / (10 ** token_metadata.decimals))
+                balance = await contract.functions.balanceOf(to_checksum_address(user_account)).call()
+                return BalanceResult(amount=balance / (10 ** token.decimals))
 
             return _balance_of
         else:
