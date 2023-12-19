@@ -1,4 +1,4 @@
-from inspect import signature
+from inspect import signature, Signature
 from abc import abstractmethod
 from typing import get_args, Union, TypeVar, Type, Generic, LiteralString, Callable, Optional, Awaitable
 from pydantic.v1 import BaseModel
@@ -77,7 +77,7 @@ class FunctionWrapper(Generic[Input, Output]):
                 for name, field in self.input_type().__fields__.items()
             }
             func_params = {
-                name: (param.annotation, param.default)
+                name: (param.annotation, param.default if param.default is not Signature.empty else None)
                 for name, param in signature(self.function).parameters.items()
             }
             if input_fields != func_params:
@@ -92,7 +92,7 @@ class FunctionWrapper(Generic[Input, Output]):
                 for name, field in self.input_type().__fields__.items()
             }
             func_params = {
-                name: (param.annotation, param.default)
+                name: (param.annotation, param.default if param.default is not Signature.empty else None)
                 for name, param in signature(self.async_function).parameters.items()
             }
             if input_fields != func_params:
