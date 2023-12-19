@@ -24,7 +24,7 @@ def register_chatter_api(chatter: Chatter) -> APIRouter:
                     question,
                     chat_history,
                     config={
-                        "callbacks": stream_handler
+                        "callbacks": [stream_handler]
                     }
                 )
                 # await stream_handler.send_metadata(answer)
