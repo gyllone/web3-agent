@@ -11,7 +11,7 @@ from functions.wrapper import FunctionWrapper
 class BalanceArgs(BaseModel):
     account: str = Field(description="The account address to query balance for")
     token_symbol: Optional[str] = Field(None, description="The symbol of the token")
-    token_contract: Optional[str] = Field(None, description="The token contract address of the token")
+    token_contract: Optional[str] = Field(None, description="The contract address of the token")
 
 
 class BalanceGetter(FunctionWrapper[BalanceArgs, float]):
@@ -76,11 +76,16 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, float]):
             ) -> float:
                 assert self.web3 is not None
                 token = self._get_token(token_symbol, token_contract)
-                contract = self.web3.eth.contract(
-                    address=to_checksum_address(token.address),
-                    abi=self.abi,
-                )
-                balance = contract.functions.balanceOf(to_checksum_address(account)).call()
+                if token.address is None:
+                    # native coin balance
+                    balance = self.web3.eth.get_balance(to_checksum_address(account))
+                else:
+                    # ERC20 token balance
+                    contract = self.web3.eth.contract(
+                        address=to_checksum_address(token.address),
+                        abi=self.abi,
+                    )
+                    balance = contract.functions.balanceOf(to_checksum_address(account)).call()
                 return balance / (10 ** token.decimals)
 
             return _balance_of
@@ -97,11 +102,16 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, float]):
             ) -> float:
                 assert self.async_web3 is not None
                 token = self._get_token(token_symbol, token_contract)
-                contract = self.async_web3.eth.contract(
-                    address=to_checksum_address(token.address),
-                    abi=self.abi,
-                )
-                balance = await contract.functions.balanceOf(to_checksum_address(account)).call()
+                if token.address is None:
+                    # native coin balance
+                    balance = await self.async_web3.eth.get_balance(to_checksum_address(account))
+                else:
+                    # ERC20 token balance
+                    contract = self.async_web3.eth.contract(
+                        address=to_checksum_address(token.address),
+                        abi=self.abi,
+                    )
+                    balance = await contract.functions.balanceOf(to_checksum_address(account)).call()
                 return balance / (10 ** token.decimals)
 
             return _balance_of

@@ -27,13 +27,12 @@ def register_chatter_api(chatter: Chatter) -> APIRouter:
                         "callbacks": [stream_handler]
                     }
                 )
-                # await stream_handler.send_metadata(answer)
             except Exception as e:
                 await stream_handler.send_error(repr(e))
             finally:
                 await stream_handler.stop()
 
-        await asyncio.create_task(_chatting())
+        _ = asyncio.create_task(_chatting())
         return StreamingResponse(
             stream_handler,
             media_type='text/event-stream',
