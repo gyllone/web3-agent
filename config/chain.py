@@ -38,15 +38,12 @@ class ChainConfig(BaseConfig):
 
     @classmethod
     @model_validator(mode="after")
-    def validate_environment(cls, values: Any) -> Any:
+    def validate_environment(cls, **values) -> Any:
         """Validate token list."""
-        if isinstance(values, Dict):
-            tokens: List[TokenMetadata] = values.get("tokens", [])
-            token_cache_by_symbol = {}
-            token_cache_by_address = {}
-            for token in tokens:
-                token_cache_by_symbol[token.symbol] = token
-                token_cache_by_address[token.address] = token
-            values["token_cache_by_symbol"] = token_cache_by_symbol
-            values["token_cache_by_address"] = token_cache_by_address
+        tokens = values["tokens"]
+        token_cache_by_symbol = values["token_cache_by_symbol"]
+        token_cache_by_address = values["token_cache_by_address"]
+        for token in tokens:
+            token_cache_by_symbol[token.symbol] = token
+            token_cache_by_address[token.address] = token
         return values
