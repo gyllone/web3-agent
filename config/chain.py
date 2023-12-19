@@ -43,7 +43,6 @@ class ChainConfig(BaseConfig):
         assert isinstance(value, ChainConfig)
         for token in value.tokens:
             value.token_cache_by_symbol[token.symbol] = token
-            if token.address is None:
-                raise ValueError(f"Token {token.symbol} has no address")
-            value.token_cache_by_address[token.address] = token
+            if token.address is not None:
+                value.token_cache_by_address[token.address] = token
         return value
