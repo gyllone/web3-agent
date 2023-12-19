@@ -9,7 +9,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.chat_models.openai import ChatOpenAI
-from langchain.globals import set_debug
+from langchain.globals import set_debug, set_verbose
 from web3 import AsyncWeb3
 
 
@@ -17,6 +17,12 @@ def parse_args():
     parser = argparse.ArgumentParser(prog="gonswap-agent", description="Run the gonswap agent service.")
     parser.add_argument(
         "--log-level", type=str, default="INFO", help="log level"
+    )
+    parser.add_argument(
+        "--debug", type=bool, default=False, help="debug mode"
+    )
+    parser.add_argument(
+        "--verbose", type=bool, default=False, help="verbose mode"
     )
     parser.add_argument(
         "--host", type=str, default="0.0.0.0", help="host address"
@@ -55,13 +61,14 @@ async def main():
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
+    set_debug(args.debug)
+    set_verbose(args.verbose)
+
     web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(chain_config.chain.rpc_url))
     balance_getter = BalanceGetter(
         chain_config=chain_config,
         async_web3=web3,
     )
-
-    set_debug(True)
 
     agent_model = ChatOpenAI(**model_config.agent_args.model_dump())
     chatter = Chatter(
