@@ -49,7 +49,10 @@ class FunctionWrapper(Generic[Input, Output]):
         for c in cls.__orig_bases__:  # type: ignore[attr-defined]
             type_args = get_args(c)
             if type_args and len(type_args) == 2:
-                return type_args[0]
+                tp = type_args[0]
+                if not issubclass(tp, BaseModel):
+                    raise TypeError(f"input type {tp} must be a subclass of BaseModel")
+                return tp
         raise TypeError(f"{cls.__name__} doesn't have an inferable input type.")
 
     @classmethod
@@ -58,7 +61,10 @@ class FunctionWrapper(Generic[Input, Output]):
         for c in cls.__orig_bases__:  # type: ignore[attr-defined]
             type_args = get_args(c)
             if type_args and len(type_args) == 2:
-                return type_args[1]
+                tp = type_args[1]
+                if not issubclass(tp, BaseModel):
+                    raise TypeError(f"output type {tp} must be a subclass of BaseModel")
+                return tp
         raise TypeError(f"{cls.__name__} doesn't have an inferable output type.")
 
     @property
