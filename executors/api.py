@@ -33,7 +33,7 @@ def register_chatter_api(chatter: Chatter) -> APIRouter:
             finally:
                 await stream_handler.stop()
 
-        asyncio.create_task(_chatting())
+        await asyncio.create_task(_chatting())
         return StreamingResponse(
             stream_handler,
             media_type='text/event-stream',

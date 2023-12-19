@@ -9,6 +9,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.chat_models.openai import ChatOpenAI
+from langchain.globals import set_debug
 from web3 import AsyncWeb3
 
 
@@ -59,6 +60,8 @@ async def main():
         chain_config=chain_config,
         async_web3=web3,
     )
+
+    set_debug(True)
 
     agent_model = ChatOpenAI(**model_config.agent_args.model_dump())
     chatter = Chatter(
