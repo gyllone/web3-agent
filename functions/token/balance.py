@@ -24,11 +24,9 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
     async_web3: Optional[AsyncWeb3]
 
     abi: ABIFunction = {
-        "constant": True,
-        "inputs": [{"name": "_owner", "type": "address"}],
+        "inputs": [{"name": "account", "type": "address"}],
         "name": "balanceOf",
         "outputs": [{"name": "balance", "type": "uint256"}],
-        "payable": False,
         "stateMutability": "view",
         "type": "function"
     }
