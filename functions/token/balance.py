@@ -36,12 +36,13 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, float]):
         web3: Optional[Web3] = None,
         async_web3: Optional[AsyncWeb3] = None,
     ):
-        super().__init__()
         if not web3 and not async_web3:
             raise ValueError("Either web3 or async_web3 must be provided")
         self.chain_config = chain_config
         self.web3 = web3
         self.async_web3 = async_web3
+
+        super().__init__()
 
     @classmethod
     def name(cls) -> LiteralString:

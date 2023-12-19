@@ -35,8 +35,9 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResponse]):
     base_url: str
 
     def __init__(self, *, base_url: str):
-        super().__init__()
         self.base_url = base_url
+
+        super().__init__()
 
     @classmethod
     def name(cls) -> LiteralString:
