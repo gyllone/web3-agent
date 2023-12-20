@@ -1,8 +1,8 @@
 from typing import Dict, List, Any, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
-from eth_utils import is_address
 
 from config.base import BaseConfig
+from common.utils import check_address
 
 
 class TokenMetadata(BaseModel):
@@ -15,10 +15,7 @@ class TokenMetadata(BaseModel):
     @classmethod
     def check_address(cls, v: Any) -> Any:
         if v is not None:
-            if is_address(v):
-                return v
-            else:
-                raise ValueError(f"Invalid address {v}")
+            return check_address(v)
 
 
 class ChainMetadata(BaseModel):
