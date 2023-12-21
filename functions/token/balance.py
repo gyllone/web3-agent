@@ -11,15 +11,15 @@ from common.utils import check_address
 
 class BalanceArgs(BaseModel):
     account: str = Field(description="The account address to query balance for")
-    token_symbol: Optional[str] = Field(description="The symbol of the token")
-    token_contract: Optional[str] = Field(description="The contract address of the token")
+    token_symbol: Optional[str] = Field(None, description="The symbol of the token")
+    token_address: Optional[str] = Field(None, description="The contract address of the token")
 
     @validator("account", pre=True)
     @classmethod
     def check_account(cls, v: Any) -> Any:
         return check_address(v)
 
-    @validator("token_contract", pre=True)
+    @validator("token_address", pre=True)
     @classmethod
     def check_token_contract(cls, v: Any) -> Any:
         if v is not None:
@@ -69,12 +69,12 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, float]):
         if self.web3:
             def _balance_of(
                 account: str,
-                token_symbol: Optional[str],
-                token_contract: Optional[str],
+                token_symbol: Optional[str] = None,
+                token_address: Optional[str] = None,
             ) -> float:
                 assert self.web3 is not None
 
-                token = self.chain_config.get_token(token_symbol, token_contract)
+                token = self.chain_config.get_token(token_symbol, token_address)
                 account = to_checksum_address(account)
                 if token.is_native:
                     # native coin balance
@@ -97,11 +97,11 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, float]):
         if self.async_web3:
             async def _balance_of(
                 account: str,
-                token_symbol: Optional[str],
-                token_contract: Optional[str],
+                token_symbol: Optional[str] = None,
+                token_address: Optional[str] = None,
             ) -> float:
                 assert self.async_web3 is not None
-                token = self.chain_config.get_token(token_symbol, token_contract)
+                token = self.chain_config.get_token(token_symbol, token_address)
                 account = to_checksum_address(account)
                 if token.is_native:
                     # native coin balance

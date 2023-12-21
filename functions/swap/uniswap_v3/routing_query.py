@@ -1,7 +1,7 @@
 import httpx
 
 from httpx import AsyncClient, Response
-from typing import Any, LiteralString, Optional, Callable, Awaitable
+from typing import Any, Union, Literal, LiteralString, Optional, Callable, Awaitable
 from pydantic.v1 import BaseModel, Field, validator
 
 from functions.wrapper import FunctionWrapper
@@ -10,13 +10,13 @@ from config.chain import ChainConfig
 
 
 class RoutingQueryArgs(BaseModel):
-    token_in_symbol: Optional[str] = Field(description="Symbol of the token to swap in")
-    token_in_address: Optional[str] = Field(description="Contract address of the token to swap in")
-    token_out_symbol: Optional[str] = Field(description="Symbol of the token to swap out")
-    token_out_address: Optional[str] = Field(description="Contract address of the token to swap out")
     amount_in: float = Field(description="Amount of the token to swap in")
-    tp: str = Field(description='Type of the swap event, must be either "exactIn" or "exactOut"')
-    recipient: str = Field(description="Recipient of token out")
+    tp: Union[Literal["exactIn"], Literal["exactOut"]] = Field(description="Type of the swap event")
+    recipient: str = Field(description="Recipient address of the token out")
+    token_in_symbol: Optional[str] = Field(None, description="Symbol of the token to swap in")
+    token_in_address: Optional[str] = Field(None, description="Contract address of the token to swap in")
+    token_out_symbol: Optional[str] = Field(None, description="Symbol of the token to swap out")
+    token_out_address: Optional[str] = Field(None, description="Contract address of the token to swap out")
     protocol: str = Field("v3", description="Protocol to use")
     enable_universal_router: bool = Field(False, description="Enable universal router")
 
@@ -70,13 +70,13 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
 
     def _create_params(
         self,
-        token_in_symbol: Optional[str],
-        token_in_address: Optional[str],
-        token_out_symbol: Optional[str],
-        token_out_address: Optional[str],
         amount_in: float,
-        tp: str,
+        tp: Union[Literal["exactIn"], Literal["exactOut"]],
         recipient: str,
+        token_in_symbol: Optional[str] = None,
+        token_in_address: Optional[str] = None,
+        token_out_symbol: Optional[str] = None,
+        token_out_address: Optional[str] = None,
         protocols: str = "v3",
         enable_universal_router: bool = False,
     ) -> dict:
@@ -113,13 +113,13 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
     @property
     def tool_func(self) -> Optional[Callable[..., RoutingResult]]:
         def _query_routing(
-            token_in_symbol: Optional[str],
-            token_in_address: Optional[str],
-            token_out_symbol: Optional[str],
-            token_out_address: Optional[str],
             amount_in: float,
-            tp: str,
+            tp: Union[Literal["exactIn"], Literal["exactOut"]],
             recipient: str,
+            token_in_symbol: Optional[str] = None,
+            token_in_address: Optional[str] = None,
+            token_out_symbol: Optional[str] = None,
+            token_out_address: Optional[str] = None,
             protocols: str = "v3",
             enable_universal_router: bool = False,
         ) -> RoutingResult:
@@ -127,13 +127,13 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
             resp = httpx.get(
                 self.base_url,
                 params=self._create_params(
+                    amount_in,
+                    tp,
+                    recipient,
                     token_in_symbol,
                     token_in_address,
                     token_out_symbol,
                     token_out_address,
-                    amount_in,
-                    tp,
-                    recipient,
                     protocols,
                     enable_universal_router,
                 ),
@@ -145,13 +145,13 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
     @property
     def async_tool_func(self) -> Optional[Callable[..., Awaitable[RoutingResult]]]:
         async def _query_routing(
-            token_in_symbol: Optional[str],
-            token_in_address: Optional[str],
-            token_out_symbol: Optional[str],
-            token_out_address: Optional[str],
             amount_in: float,
-            tp: str,
+            tp: Union[Literal["exactIn"], Literal["exactOut"]],
             recipient: str,
+            token_in_symbol: Optional[str] = None,
+            token_in_address: Optional[str] = None,
+            token_out_symbol: Optional[str] = None,
+            token_out_address: Optional[str] = None,
             protocols: str = "v3",
             enable_universal_router: bool = False,
         ) -> RoutingResult:
@@ -160,13 +160,13 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
                 resp = await client.get(
                     self.base_url,
                     params=self._create_params(
+                        amount_in,
+                        tp,
+                        recipient,
                         token_in_symbol,
                         token_in_address,
                         token_out_symbol,
                         token_out_address,
-                        amount_in,
-                        tp,
-                        recipient,
                         protocols,
                         enable_universal_router,
                     ),
