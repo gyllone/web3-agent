@@ -49,6 +49,7 @@ async def main():
     from executors.chatter import Chatter
     from executors.api import register_chatter_api
     from functions.token.balance import BalanceGetter
+    from functions.swap.uniswap_v3.routing_query import RoutingQuerier
     from config import ChainConfig, ModelConfig
 
     model_config = ModelConfig.from_file(Path(args.model_config))
@@ -69,11 +70,15 @@ async def main():
         chain_config=chain_config,
         async_web3=web3,
     )
+    routing_querier = RoutingQuerier(
+        chain_config=chain_config,
+        base_url="https://526wv2r9wf.execute-api.ap-northeast-1.amazonaws.com/prod/quote",
+    )
 
     agent_model = ChatOpenAI(**model_config.agent_args.model_dump())
     chatter = Chatter(
         model=agent_model,
-        tools=[balance_getter.tool()],
+        tools=[balance_getter.tool(), RoutingQuerier.tool()],
     )
 
     # setup service
