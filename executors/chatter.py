@@ -17,27 +17,25 @@ class Chatter:
         tools: Sequence[BaseTool],
         **kwargs,
     ):
-        chat_history = MessagesPlaceholder(variable_name="chat_history")
-        system_message = SystemMessage(
-            content="You are an assistant of Gonswap, which is a DEX on the X1 network. Your "
-                    "main job is to answer the user's question."
-        )
+        messages = MessagesPlaceholder(variable_name="messages")
         agent = OpenAIFunctionsAgent.from_llm_and_tools(
             model,
             tools,
-            extra_prompt_messages=[chat_history],
-            system_message=system_message,
+            extra_prompt_messages=[messages],
+            system_message=None,
         )
         self.agent = AgentExecutor.from_agent_and_tools(agent, tools, **kwargs)
 
     @staticmethod
-    def _make_chat_history(chat_history: List[Tuple[str, str]]) -> List[BaseMessage]:
+    def _create_messages(chat_history: List[Tuple[str, str]]) -> List[BaseMessage]:
         messages = []
         for role, message in chat_history:
             if role in ("human", "user"):
                 messages.append(HumanMessage(content=message))
             elif role in ("ai", "assistant"):
                 messages.append(AIMessage(content=message))
+            elif role in ("system", "bot"):
+                messages.append(SystemMessage(content=message))
             else:
                 raise ValueError(f"Unexpected role: {role}")
         return messages
@@ -51,7 +49,7 @@ class Chatter:
         result = await self.agent.ainvoke(
             {
                 "input": question,
-                "chat_history": self._make_chat_history(chat_history),
+                "messages": self._create_messages(chat_history),
             },
             config=config,
         )

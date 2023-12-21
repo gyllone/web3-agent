@@ -131,5 +131,6 @@ class FunctionWrapper(Generic[Input, Output]):
             name=self.name(),
             description=self.description(),
             args_schema=self.input_type(),
+            handle_tool_error=True,
             **kwargs,
         )
