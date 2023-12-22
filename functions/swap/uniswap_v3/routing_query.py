@@ -39,13 +39,13 @@ class RoutingQueryArgs(BaseModel):
 
 
 class RoutingResult(BaseModel):
-    block_number: str = Field(description="Block number of the routing query simulated at")
+    block_number: int = Field(description="Block number of the routing query simulated at")
     simulation_status: str = Field(description="Simulation status")
     simulation_error: bool = Field(description="Simulation error")
-    gas_estimate_usd: str = Field(description="Gas estimated in USD for the swap transaction")
+    gas_estimate_usd: float = Field(description="Gas estimated in USD for the swap transaction")
     routing: str = Field(description="Routing query string")
-    amount_in: str = Field(description="Amount of the token to swap in")
-    amount_out: str = Field(description="Amount of the token to swap out")
+    amount_in: float = Field(description="Amount of the token to swap in")
+    amount_out: float = Field(description="Amount of the token to swap out")
 
 
 class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
@@ -96,22 +96,19 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
 
     @staticmethod
     def _create_result(resp: Response) -> RoutingResult:
-        if resp.status_code == 200:
-            body: dict = resp.json()
-            return RoutingResult(
-                block_number=body["blockNumber"],
-                simulation_status=body["simulationStatus"],
-                simulation_error=body["simulationError"],
-                gas_estimate_usd=body["gasUseEstimateUSD"],
-                routing=body["routeString"],
-                amount_in=body["amountDecimals"],
-                amount_out=body["quoteDecimals"],
-            )
-        else:
-            raise Exception(f"Failed to query routing, status: {resp.status_code}, resp: {str(resp.content)}")
+        body: dict = resp.json()
+        return RoutingResult(
+            block_number=int(body["blockNumber"]),
+            simulation_status=body["simulationStatus"],
+            simulation_error=body["simulationError"],
+            gas_estimate_usd=float(body["gasUseEstimateUSD"]),
+            routing=body["routeString"],
+            amount_in=float(body["amountDecimals"]),
+            amount_out=float(body["quoteDecimals"]),
+        )
 
     @property
-    def tool_func(self) -> Optional[Callable[..., RoutingResult]]:
+    def func(self) -> Optional[Callable[..., RoutingResult]]:
         def _query_routing(
             amount_in: float,
             tp: Union[Literal["exactIn"], Literal["exactOut"]],
@@ -143,7 +140,7 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
         return _query_routing
 
     @property
-    def async_tool_func(self) -> Optional[Callable[..., Awaitable[RoutingResult]]]:
+    def async_func(self) -> Optional[Callable[..., Awaitable[RoutingResult]]]:
         async def _query_routing(
             amount_in: float,
             tp: Union[Literal["exactIn"], Literal["exactOut"]],
