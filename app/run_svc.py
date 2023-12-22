@@ -31,10 +31,10 @@ def parse_args():
         "--port", type=int, default=8901, help="port number"
     )
     parser.add_argument(
-        "--model-config", type=str, default="../.config/model.json", help="model config file path"
+        "--model-config", type=str, default=".config/model.json", help="model config file path"
     )
     parser.add_argument(
-        "--chain-config", type=str, default="../.config/chain.json", help="chain config file path"
+        "--chain-config", type=str, default=".config/chain.json", help="chain config file path"
     )
 
     return parser.parse_args()
