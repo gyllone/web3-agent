@@ -96,16 +96,19 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
 
     @staticmethod
     def _create_result(resp: Response) -> RoutingResult:
-        body: dict = resp.json()
-        return RoutingResult(
-            block_number=int(body["blockNumber"]),
-            simulation_status=body["simulationStatus"],
-            simulation_error=body["simulationError"],
-            gas_estimate_usd=float(body["gasUseEstimateUSD"]),
-            routing=body["routeString"],
-            amount_in=float(body["amountDecimals"]),
-            amount_out=float(body["quoteDecimals"]),
-        )
+        if resp.status_code == 200:
+            body: dict = resp.json()
+            return RoutingResult(
+                block_number=int(body["blockNumber"]),
+                simulation_status=body["simulationStatus"],
+                simulation_error=body["simulationError"],
+                gas_estimate_usd=float(body["gasUseEstimateUSD"]),
+                routing=body["routeString"],
+                amount_in=float(body["amountDecimals"]),
+                amount_out=float(body["quoteDecimals"]),
+            )
+        else:
+            raise RuntimeError(f"failed to query routing: status: {resp.status_code}, response: {resp.text}")
 
     @property
     def func(self) -> Optional[Callable[..., RoutingResult]]:
