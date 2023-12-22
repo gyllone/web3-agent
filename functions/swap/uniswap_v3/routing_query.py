@@ -77,7 +77,7 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
         token_in_address: Optional[str] = None,
         token_out_symbol: Optional[str] = None,
         token_out_address: Optional[str] = None,
-        protocols: str = "v3",
+        protocol: str = "v3",
         enable_universal_router: bool = False,
     ) -> dict:
         token_in = self.chain_config.get_token(token_in_symbol, token_in_address)
@@ -90,7 +90,7 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
             "amount": int(amount_in * 10 ** token_in.decimals),
             "type": tp,
             "recipient": recipient,
-            "protocols": protocols,
+            "protocols": protocol,
             "enableUniversalRouter": enable_universal_router,
         }
 
@@ -120,7 +120,7 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
             token_in_address: Optional[str] = None,
             token_out_symbol: Optional[str] = None,
             token_out_address: Optional[str] = None,
-            protocols: str = "v3",
+            protocol: str = "v3",
             enable_universal_router: bool = False,
         ) -> RoutingResult:
             """Query routing information from the routing service."""
@@ -134,7 +134,7 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
                     token_in_address,
                     token_out_symbol,
                     token_out_address,
-                    protocols,
+                    protocol,
                     enable_universal_router,
                 ),
             )
@@ -152,7 +152,7 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
             token_in_address: Optional[str] = None,
             token_out_symbol: Optional[str] = None,
             token_out_address: Optional[str] = None,
-            protocols: str = "v3",
+            protocol: str = "v3",
             enable_universal_router: bool = False,
         ) -> RoutingResult:
             """Query routing information from the routing service."""
@@ -167,7 +167,7 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
                         token_in_address,
                         token_out_symbol,
                         token_out_address,
-                        protocols,
+                        protocol,
                         enable_universal_router,
                     ),
                 )
