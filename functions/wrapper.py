@@ -2,7 +2,7 @@ from inspect import signature, Signature
 from abc import abstractmethod
 from typing import get_args, Union, TypeVar, Type, Generic, LiteralString, Callable, Optional, Awaitable
 from pydantic.v1 import BaseModel
-from langchain_core.tools import BaseTool, StructuredTool, ToolException
+from langchain.tools.base import BaseTool, StructuredTool, ToolException
 from langchain.callbacks.manager import CallbackManagerForChainRun, AsyncCallbackManagerForChainRun
 from langchain.schema.runnable import Runnable, RunnableConfig, RunnableLambda
 from functools import wraps
