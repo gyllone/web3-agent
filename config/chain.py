@@ -1,24 +1,21 @@
 from typing import Dict, List, Any, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
-from eth_utils import is_address
 
 from config.base import BaseConfig
+from common.utils import check_address
 
 
 class TokenMetadata(BaseModel):
+    is_native: bool
     name: str
     symbol: str
+    address: str
     decimals: int
-    address: Optional[str] = None
 
     @field_validator("address", mode="before")
     @classmethod
     def check_address(cls, v: Any) -> Any:
-        if v is not None:
-            if is_address(v):
-                return v
-            else:
-                raise ValueError(f"Invalid address {v}")
+        return check_address(v)
 
 
 class ChainMetadata(BaseModel):
@@ -43,6 +40,18 @@ class ChainConfig(BaseConfig):
         assert isinstance(value, ChainConfig)
         for token in value.tokens:
             value.token_cache_by_symbol[token.symbol] = token
-            if token.address is not None:
-                value.token_cache_by_address[token.address] = token
+            value.token_cache_by_address[token.address] = token
         return value
+
+    def get_token(self, symbol: Optional[str], address: Optional[str]) -> TokenMetadata:
+        if symbol is not None:
+            if symbol in self.token_cache_by_symbol:
+                return self.token_cache_by_symbol[symbol]
+        if address is not None:
+            if address in self.token_cache_by_address:
+                return self.token_cache_by_address[address]
+
+        if symbol is None and address is None:
+            raise ValueError("Either symbol or address must be provided")
+        else:
+            raise ValueError(f"Token (symbol = {symbol}, address = {address}) not found in token list")

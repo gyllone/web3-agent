@@ -2,14 +2,21 @@ from inspect import signature, Signature
 from abc import abstractmethod
 from typing import get_args, Union, TypeVar, Type, Generic, LiteralString, Callable, Optional, Awaitable
 from pydantic.v1 import BaseModel
-from langchain.tools import BaseTool, StructuredTool
+from langchain.tools.base import BaseTool, StructuredTool, ToolException
 from langchain.callbacks.manager import CallbackManagerForChainRun, AsyncCallbackManagerForChainRun
 from langchain.schema.runnable import Runnable, RunnableConfig, RunnableLambda
+from functools import wraps
 
 
 Input = TypeVar("Input", bound=BaseModel, contravariant=True)
-Output = TypeVar("Output", covariant=True)
+Output = TypeVar("Output", bound=BaseModel, covariant=True)
 
+OrigFunc = Callable[..., Output]
+AsyncOrigFunc = Callable[..., Awaitable[Output]]
+
+# tool function returns a json string dumped from Output
+ToolFunc = Callable[..., str]
+AsyncToolFunc = Callable[..., Awaitable[str]]
 
 RunnableFunc = Union[
     Callable[[Input], Output],
@@ -27,24 +34,20 @@ AsyncRunnableFunc = Union[
     ],
 ]
 
-# tool function returns a json string dumped from Output
-ToolFunc = Callable[..., Output]
-AsyncToolFunc = Callable[..., Awaitable[Output]]
-
 
 class FunctionWrapper(Generic[Input, Output]):
     """A wrapper which wraps a function to either a runnable or a tool."""
 
     def __init__(self):
-        if self.tool_func:
-            self._validate_tool_func(self.tool_func)
-        if self.async_tool_func:
-            self._validate_tool_func(self.async_tool_func)
-        if not self.tool_func and not self.async_tool_func:
+        if self.func:
+            self._validate_func(self.func)
+        if self.async_func:
+            self._validate_func(self.async_func)
+        if not self.func and not self.async_func:
             raise NotImplementedError("must define at least one process function")
 
     @classmethod
-    def _validate_tool_func(cls, func: Callable):
+    def _validate_func(cls, func: Callable):
         input_fields = {
             name: (field.annotation, field.default)
             for name, field in cls.input_type().__fields__.items()
@@ -88,29 +91,63 @@ class FunctionWrapper(Generic[Input, Output]):
         raise TypeError(f"{cls.__name__} doesn't have an inferable output type.")
 
     @property
-    def tool_func(self) -> Optional[ToolFunc]:
+    def func(self) -> Optional[OrigFunc]:
         return None
+
+    @property
+    def async_func(self) -> Optional[AsyncOrigFunc]:
+        return None
+
+    @property
+    def tool_func(self) -> Optional[ToolFunc]:
+        if self.func:
+            @wraps(self.func)
+            def _tool_func(*args, **kwargs) -> str:
+                assert self.func is not None
+                try:
+                    output = self.func(*args, **kwargs)
+                    return output.json()
+                except Exception as e:
+                    raise ToolException(e)
+
+            return _tool_func
+        else:
+            return None
 
     @property
     def async_tool_func(self) -> Optional[AsyncToolFunc]:
-        return None
+        if self.async_func:
+            @wraps(self.async_func)
+            async def _async_tool_func(*args, **kwargs) -> str:
+                assert self.async_func is not None
+                try:
+                    output = await self.async_func(*args, **kwargs)
+                    return output.json()
+                except Exception as e:
+                    raise ToolException(e)
+
+            return _async_tool_func
+        else:
+            return None
 
     @property
     def runnable_func(self) -> Optional[RunnableFunc]:
-        if self.tool_func:
+        if self.func:
             def _runnable_func(_input: Input) -> Output:
-                assert self.tool_func is not None
-                return self.tool_func(**_input.dict())
+                assert self.func is not None
+                return self.func(**_input.dict())
+
             return _runnable_func
         else:
             return None
 
     @property
     def async_runnable_func(self) -> Optional[AsyncRunnableFunc]:
-        if self.async_tool_func:
+        if self.async_func:
             async def _async_runnable_func(_input: Input) -> Output:
-                assert self.async_tool_func is not None
-                return await self.async_tool_func(**_input.dict())
+                assert self.async_func is not None
+                return await self.async_func(**_input.dict())
+
             return _async_runnable_func
         else:
             return None
@@ -131,5 +168,6 @@ class FunctionWrapper(Generic[Input, Output]):
             name=self.name(),
             description=self.description(),
             args_schema=self.input_type(),
+            handle_tool_error=True,
             **kwargs,
         )

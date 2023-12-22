@@ -1,40 +1,61 @@
 import httpx
 
-from httpx import AsyncClient
-from typing import LiteralString, Optional, Callable, Awaitable
-from pydantic.v1 import BaseModel, Field
+from httpx import AsyncClient, Response
+from typing import Any, Union, Literal, LiteralString, Optional, Callable, Awaitable
+from pydantic.v1 import BaseModel, Field, validator
 
 from functions.wrapper import FunctionWrapper
+from common.utils import check_address
+from config.chain import ChainConfig
 
 
 class RoutingQueryArgs(BaseModel):
-    token_in_chain_id: int = Field(description="Chain ID of the token to swap in.")
-    token_in_address: str = Field(description="Address of the token to swap in.")
-    token_out_chain_id: int = Field(description="Chain ID of the token to swap out.")
-    token_out_address: str = Field(description="Address of the token to swap out.")
-    amount: int = Field(description="Amount of the token to swap in.")
-    type: str = Field(description="Type of the swap.")
-    recipient: str = Field(description="Recipient of the swap.")
-    protocols: str = Field("v3", description="Protocols to use.")
-    enable_universal_router: bool = Field(False, alias="enableUniversalRouter", description="Enable universal router.")
+    amount_in: float = Field(description="Amount of the token to swap in")
+    tp: Union[Literal["exactIn"], Literal["exactOut"]] = Field(description="Type of the swap event")
+    recipient: str = Field(description="Recipient address of the token out")
+    token_in_symbol: Optional[str] = Field(None, description="Symbol of the token to swap in")
+    token_in_address: Optional[str] = Field(None, description="Contract address of the token to swap in")
+    token_out_symbol: Optional[str] = Field(None, description="Symbol of the token to swap out")
+    token_out_address: Optional[str] = Field(None, description="Contract address of the token to swap out")
+    protocol: str = Field("v3", description="Protocol to use")
+    enable_universal_router: bool = Field(False, description="Enable universal router")
+
+    @validator("token_in_address", pre=True)
+    @classmethod
+    def check_token_in_address(cls, v: Any) -> Any:
+        if v is not None:
+            return check_address(v)
+
+    @validator("token_out_address", pre=True)
+    @classmethod
+    def check_token_out_address(cls, v: Any) -> Any:
+        if v is not None:
+            return check_address(v)
+
+    @validator("recipient", pre=True)
+    @classmethod
+    def check_recipient(cls, v: Any) -> Any:
+        return check_address(v)
 
 
-class RoutingResponse(BaseModel):
-    block_number: str = Field(alias="blockNumber", description="Block number of the routing transaction")
-    amount_decimals: str = Field(alias="amountDecimals", description="Decimals of the amount")
-    quote_decimals: str = Field(alias="quoteDecimals", description="Decimals of the quote")
-    gas_estimate_usd: str = Field(alias="gasUseEstimateUSD", description="Gas estimate in USD")
-    simulation_status: str = Field(alias="simulationStatus", description="Simulation status")
-    simulation_error: bool = Field(alias="simulationError", description="Simulation error")
-    routing: str = Field(alias="routeString", description="Routing string")
+class RoutingResult(BaseModel):
+    block_number: int = Field(description="Block number of the routing query simulated at")
+    simulation_status: str = Field(description="Simulation status")
+    simulation_error: bool = Field(description="Simulation error")
+    gas_estimate_usd: float = Field(description="Gas estimated in USD for the swap transaction")
+    routing: str = Field(description="Routing query string")
+    amount_in: float = Field(description="Amount of the token to swap in")
+    amount_out: float = Field(description="Amount of the token to swap out")
 
 
-class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResponse]):
+class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
     """Query routing information from the routing service."""
 
+    chain_config: ChainConfig
     base_url: str
 
-    def __init__(self, *, base_url: str):
+    def __init__(self, *, chain_config: ChainConfig, base_url: str):
+        self.chain_config = chain_config
         self.base_url = base_url
 
         super().__init__()
@@ -45,69 +66,111 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResponse]):
 
     @classmethod
     def description(cls) -> LiteralString:
-        return "Query routing information from the routing service"
+        return "useful for when query the routing for a token swap simulation"
+
+    def _create_params(
+        self,
+        amount_in: float,
+        tp: Union[Literal["exactIn"], Literal["exactOut"]],
+        recipient: str,
+        token_in_symbol: Optional[str] = None,
+        token_in_address: Optional[str] = None,
+        token_out_symbol: Optional[str] = None,
+        token_out_address: Optional[str] = None,
+        protocol: str = "v3",
+        enable_universal_router: bool = False,
+    ) -> dict:
+        token_in = self.chain_config.get_token(token_in_symbol, token_in_address)
+        token_out = self.chain_config.get_token(token_out_symbol, token_out_address)
+        return {
+            "tokenInChainId": self.chain_config.chain.chain_id,
+            "tokenInAddress": token_in.address,
+            "tokenOutChainId": self.chain_config.chain.chain_id,
+            "tokenOutAddress": token_out.address,
+            "amount": int(amount_in * 10 ** token_in.decimals),
+            "type": tp,
+            "recipient": recipient,
+            "protocols": protocol,
+            "enableUniversalRouter": enable_universal_router,
+        }
+
+    @staticmethod
+    def _create_result(resp: Response) -> RoutingResult:
+        if resp.status_code == 200:
+            body: dict = resp.json()
+            return RoutingResult(
+                block_number=int(body["blockNumber"]),
+                simulation_status=body["simulationStatus"],
+                simulation_error=body["simulationError"],
+                gas_estimate_usd=float(body["gasUseEstimateUSD"]),
+                routing=body["routeString"],
+                amount_in=float(body["amountDecimals"]),
+                amount_out=float(body["quoteDecimals"]),
+            )
+        else:
+            raise RuntimeError(f"failed to query routing: status: {resp.status_code}, response: {resp.text}")
 
     @property
-    def tool_func(self) -> Optional[Callable[..., RoutingResponse]]:
+    def func(self) -> Optional[Callable[..., RoutingResult]]:
         def _query_routing(
-            token_in_chain_id: int,
-            token_in_address: str,
-            token_out_chain_id: int,
-            token_out_address: str,
-            amount: int,
-            type: str,
+            amount_in: float,
+            tp: Union[Literal["exactIn"], Literal["exactOut"]],
             recipient: str,
-            protocols: str = "v3",
+            token_in_symbol: Optional[str] = None,
+            token_in_address: Optional[str] = None,
+            token_out_symbol: Optional[str] = None,
+            token_out_address: Optional[str] = None,
+            protocol: str = "v3",
             enable_universal_router: bool = False,
-        ) -> RoutingResponse:
+        ) -> RoutingResult:
             """Query routing information from the routing service."""
             resp = httpx.get(
                 self.base_url,
-                params={
-                    "tokenInChainId": token_in_chain_id,
-                    "tokenInAddress": token_in_address,
-                    "tokenOutChainId": token_out_chain_id,
-                    "tokenOutAddress": token_out_address,
-                    "amount": amount,
-                    "type": type,
-                    "recipient": recipient,
-                    "protocols": protocols,
-                    "enableUniversalRouter": enable_universal_router,
-                },
+                params=self._create_params(
+                    amount_in,
+                    tp,
+                    recipient,
+                    token_in_symbol,
+                    token_in_address,
+                    token_out_symbol,
+                    token_out_address,
+                    protocol,
+                    enable_universal_router,
+                ),
             )
-            return RoutingResponse.parse_obj(resp.json())
+            return self._create_result(resp)
 
         return _query_routing
 
     @property
-    def async_tool_func(self) -> Optional[Callable[..., Awaitable[RoutingResponse]]]:
+    def async_func(self) -> Optional[Callable[..., Awaitable[RoutingResult]]]:
         async def _query_routing(
-            token_in_chain_id: int,
-            token_in_address: str,
-            token_out_chain_id: int,
-            token_out_address: str,
-            amount: int,
-            type: str,
+            amount_in: float,
+            tp: Union[Literal["exactIn"], Literal["exactOut"]],
             recipient: str,
-            protocols: str = "v3",
+            token_in_symbol: Optional[str] = None,
+            token_in_address: Optional[str] = None,
+            token_out_symbol: Optional[str] = None,
+            token_out_address: Optional[str] = None,
+            protocol: str = "v3",
             enable_universal_router: bool = False,
-        ) -> RoutingResponse:
+        ) -> RoutingResult:
             """Query routing information from the routing service."""
             async with AsyncClient() as client:
                 resp = await client.get(
                     self.base_url,
-                    params={
-                        "tokenInChainId": token_in_chain_id,
-                        "tokenInAddress": token_in_address,
-                        "tokenOutChainId": token_out_chain_id,
-                        "tokenOutAddress": token_out_address,
-                        "amount": amount,
-                        "type": type,
-                        "recipient": recipient,
-                        "protocols": protocols,
-                        "enableUniversalRouter": enable_universal_router,
-                    },
+                    params=self._create_params(
+                        amount_in,
+                        tp,
+                        recipient,
+                        token_in_symbol,
+                        token_in_address,
+                        token_out_symbol,
+                        token_out_address,
+                        protocol,
+                        enable_universal_router,
+                    ),
                 )
-                return RoutingResponse.parse_obj(resp.json())
+                return self._create_result(resp)
 
         return _query_routing
