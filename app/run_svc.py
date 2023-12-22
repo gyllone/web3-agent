@@ -78,7 +78,7 @@ async def main():
     agent_model = ChatOpenAI(**model_config.agent_args.model_dump())
     chatter = Chatter(
         model=agent_model,
-        tools=[balance_getter.tool(), RoutingQuerier.tool()],
+        tools=[balance_getter.tool(), routing_querier.tool()],
     )
 
     # setup service
