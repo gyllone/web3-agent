@@ -72,7 +72,7 @@ async def main():
     )
     routing_querier = RoutingQuerier(
         chain_config=chain_config,
-        base_url="https://526wv2r9wf.execute-api.ap-northeast-1.amazonaws.com/prod/quote",
+        base_url="https://routing-prod.gonswap.com/quote",
     )
 
     agent_model = ChatOpenAI(**model_config.agent_args.model_dump())
