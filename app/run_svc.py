@@ -10,6 +10,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.chat_models.openai import ChatOpenAI
 from langchain.globals import set_debug, set_verbose
+from langchain_experimental.tools import PythonAstREPLTool
+from langchain.tools.tavily_search import TavilySearchResults
 from web3 import AsyncWeb3
 
 
@@ -78,7 +80,12 @@ async def main():
     agent_model = ChatOpenAI(**model_config.agent_args.model_dump())
     chatter = Chatter(
         model=agent_model,
-        tools=[balance_getter.tool(), routing_querier.tool()],
+        tools=[
+            balance_getter.tool(),
+            routing_querier.tool(),
+            PythonAstREPLTool(),
+            TavilySearchResults(),
+        ],
     )
 
     # setup service

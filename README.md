@@ -2,10 +2,12 @@
 
 ## Installation
 ```bash
-conda create -n tradingGPT python=3.11
-conda activate tradingGPT
+conda create -n gonswapGPT python=3.11
+conda activate gonswapGPT
 conda install -y 'langchain[all]' -c conda-forge
 conda install pydantic -c conda-forge
+pip install langchain-experimental
+pip install tavily-python
 pip install httpx
 pip install openai
 pip install web3
