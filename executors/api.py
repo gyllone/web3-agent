@@ -16,6 +16,7 @@ def register_chatter_api(chatter: Chatter) -> APIRouter:
         question: Annotated[str, Body()],
         chat_history: List[Tuple[str, str]],
     ):
+        # TODO: use a callback manager is better
         callback_handler = ToolCallbackHandler()
 
         async def _chatting():
