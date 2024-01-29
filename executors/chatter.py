@@ -4,7 +4,7 @@ from langchain.tools.base import BaseTool
 from langchain.prompts import MessagesPlaceholder
 from langchain.schema import BaseMessage, SystemMessage, HumanMessage, AIMessage
 from langchain.schema.runnable import RunnableConfig
-from langchain_community.chat_models import ChatOpenAI
+from langchain_openai.chat_models import ChatOpenAI
 
 
 class Chatter:
