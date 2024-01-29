@@ -50,6 +50,7 @@ async def main():
 
     from executors.chatter import Chatter
     from executors.api import register_chatter_api
+    from functions.token.balance import BalanceGetter
     from config import ChainConfig, ModelConfig
 
     model_config = ModelConfig.from_file(Path(args.model_config))
@@ -66,10 +67,10 @@ async def main():
     set_verbose(args.verbose_mode)
 
     web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(chain_config.chain.rpc_url))
-    # balance_getter = BalanceGetter(
-    #     chain_config=chain_config,
-    #     async_web3=web3,
-    # )
+    balance_getter = BalanceGetter(
+        chain_config=chain_config,
+        async_web3=web3,
+    )
     # routing_querier = RoutingQuerier(
     #     chain_config=chain_config,
     #     base_url="https://routing-prod.gonswap.com/quote",
@@ -85,7 +86,7 @@ async def main():
     chatter = Chatter(
         model=agent_model,
         tools=[
-            # balance_getter.tool(),
+            balance_getter.tool(),
             # routing_querier.tool(),
             python_tool,
             tavily_tool,

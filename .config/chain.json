@@ -1,50 +1,57 @@
 {
   "chain": {
-    "chain_id": 195,
-    "name": "x1-testnet",
-    "rpc_url": "https://testrpc.x1.tech"
+    "chain_id": 1,
+    "name": "ethereum-mainnet",
+    "rpc_url": "https://mainnet.infura.io/v3"
   },
   "tokens": [
     {
       "is_native": true,
-      "name": "OKB",
-      "symbol": "OKB",
-      "address": "0xFFBDBfafC5369d699C45fDac506D4138570D32A3",
-      "decimals": 18
-    },
-    {
-      "is_native": false,
-      "name": "Wrapped OKB",
-      "symbol": "WOKB",
-      "address": "0xFFBDBfafC5369d699C45fDac506D4138570D32A3",
-      "decimals": 18
-    },
-    {
-      "is_native": false,
-      "name": "Tether USD",
-      "symbol": "USDT",
-      "address": "0x162Ea059C8888BFD5d6398d0380adeb371e265AA",
-      "decimals": 6
-    },
-    {
-      "is_native": false,
-      "name": "Circle USD",
-      "symbol": "USDC",
-      "address": "0x64A122bcc24e5Ce92eE9043C93D25B6563F3874a",
-      "decimals": 6
-    },
-    {
-      "is_native": false,
-      "name": "Wrapped BTC",
-      "symbol": "WBTC",
-      "address": "0x41625efc27e0A54a76F976228002e1Dd6bC911be",
+      "name": "ETH",
+      "symbol": "ETH",
+      "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       "decimals": 18
     },
     {
       "is_native": false,
       "name": "Wrapped ETH",
       "symbol": "WETH",
-      "address": "0x9455d2bff38847efc60a426E87B10ff29f1341D1",
+      "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "decimals": 18
+    },
+    {
+      "is_native": false,
+      "name": "Tether USD",
+      "symbol": "USDT",
+      "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      "decimals": 6
+    },
+    {
+      "is_native": false,
+      "name": "Circle USD",
+      "symbol": "USDC",
+      "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "decimals": 6
+    },
+    {
+      "is_native": false,
+      "name": "Wrapped BTC",
+      "symbol": "WBTC",
+      "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+      "decimals": 8
+    },
+    {
+      "is_native": false,
+      "name": "Uniswap",
+      "symbol": "UNI",
+      "address": "0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984",
+      "decimals": 18
+    },
+    {
+      "is_native": false,
+      "name": "Dai Stablecoin",
+      "symbol": "DAI",
+      "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
       "decimals": 18
     }
   ]
