@@ -9,9 +9,9 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from langchain.globals import set_debug, set_verbose
+from langchain.tools.tavily_search import TavilySearchResults
 from langchain_community.chat_models import ChatOpenAI
 from langchain_experimental.tools import PythonAstREPLTool
-from langchain.tools.tavily_search import TavilySearchResults
 from web3 import AsyncWeb3
 
 

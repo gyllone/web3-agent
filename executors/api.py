@@ -4,7 +4,7 @@ from typing import List, Annotated, Tuple
 from fastapi import APIRouter, Body
 from fastapi.responses import StreamingResponse
 
-from common.callbacks.stream_handler import StreamingCallbackHandler
+from common.callbacks.tool_handler import ToolCallbackHandler
 from executors.chatter import Chatter
 
 
@@ -16,7 +16,7 @@ def register_chatter_api(chatter: Chatter) -> APIRouter:
         question: Annotated[str, Body()],
         chat_history: List[Tuple[str, str]],
     ):
-        stream_handler = StreamingCallbackHandler()
+        callback_handler = ToolCallbackHandler()
 
         async def _chatting():
             try:
@@ -24,17 +24,17 @@ def register_chatter_api(chatter: Chatter) -> APIRouter:
                     question,
                     chat_history,
                     config={
-                        "callbacks": [stream_handler]
+                        "callbacks": [callback_handler]
                     }
                 )
             except Exception as e:
-                await stream_handler.send_error(repr(e))
+                await callback_handler.send_error(repr(e))
             finally:
-                await stream_handler.stop()
+                await callback_handler.stop()
 
         _ = asyncio.create_task(_chatting())
         return StreamingResponse(
-            stream_handler,
+            callback_handler,
             media_type='text/event-stream',
             headers={
                 'Cache-Control': 'no-cache',
