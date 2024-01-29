@@ -8,8 +8,8 @@ import nest_asyncio
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from langchain.chat_models.openai import ChatOpenAI
 from langchain.globals import set_debug, set_verbose
+from langchain_community.chat_models.openai import ChatOpenAI
 from langchain_experimental.tools import PythonAstREPLTool
 from langchain.tools.tavily_search import TavilySearchResults
 from web3 import AsyncWeb3
@@ -21,10 +21,10 @@ def parse_args():
         "--log-level", type=str, default="INFO", help="log level"
     )
     parser.add_argument(
-        "--debug", type=bool, default=False, help="debug mode"
+        "--debug-mode", type=bool, default=False, help="debug mode"
     )
     parser.add_argument(
-        "--verbose", type=bool, default=False, help="verbose mode"
+        "--verbose-mode", type=bool, default=False, help="verbose mode"
     )
     parser.add_argument(
         "--host", type=str, default="0.0.0.0", help="host address"
@@ -62,8 +62,8 @@ async def main():
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 
-    set_debug(args.debug)
-    set_verbose(args.verbose)
+    set_debug(args.debug_mode)
+    set_verbose(args.verbose_mode)
 
     web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(chain_config.chain.rpc_url))
     # balance_getter = BalanceGetter(

@@ -5,7 +5,8 @@ export TAVILY_API_KEY="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"
 
 conda run --no-capture-output -n gonswapGPT \
 python app/run_svc.py \
-  --host="127.0.0.1" \
+  --debug-mode=true \
+  --host="0.0.0.0" \
   --port=8105 \
   --model-config=".config/model.json" \
   --chain-config=".config/chain.json"

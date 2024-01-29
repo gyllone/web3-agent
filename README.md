@@ -7,6 +7,7 @@ conda activate gonswapGPT
 conda install -y 'langchain[all]' -c conda-forge
 conda install pydantic -c conda-forge
 pip install langchain-experimental
+pip install -U langchain-community
 pip install tavily-python
 pip install httpx
 pip install openai
