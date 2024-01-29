@@ -50,8 +50,6 @@ async def main():
 
     from executors.chatter import Chatter
     from executors.api import register_chatter_api
-    from functions.token.balance import BalanceGetter
-    from functions.swap.uniswap_v3.routing_query import RoutingQuerier
     from config import ChainConfig, ModelConfig
 
     model_config = ModelConfig.from_file(Path(args.model_config))
@@ -68,23 +66,29 @@ async def main():
     set_verbose(args.verbose)
 
     web3 = AsyncWeb3(AsyncWeb3.AsyncHTTPProvider(chain_config.chain.rpc_url))
-    balance_getter = BalanceGetter(
-        chain_config=chain_config,
-        async_web3=web3,
+    # balance_getter = BalanceGetter(
+    #     chain_config=chain_config,
+    #     async_web3=web3,
+    # )
+    # routing_querier = RoutingQuerier(
+    #     chain_config=chain_config,
+    #     base_url="https://routing-prod.gonswap.com/quote",
+    # )
+    python_tool = PythonAstREPLTool(
+        metadata={"notification": "*Running Python code...*\n"},
     )
-    routing_querier = RoutingQuerier(
-        chain_config=chain_config,
-        base_url="https://routing-prod.gonswap.com/quote",
+    tavily_tool = TavilySearchResults(
+        metadata={"notification": "*Searching data on Tavily...*\n"},
     )
 
     agent_model = ChatOpenAI(**model_config.agent_args.model_dump())
     chatter = Chatter(
         model=agent_model,
         tools=[
-            balance_getter.tool(),
-            routing_querier.tool(),
-            PythonAstREPLTool(),
-            TavilySearchResults(),
+            # balance_getter.tool(),
+            # routing_querier.tool(),
+            python_tool,
+            tavily_tool,
         ],
     )
 

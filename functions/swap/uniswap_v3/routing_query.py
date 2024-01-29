@@ -68,6 +68,10 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
     def description(cls) -> LiteralString:
         return "useful for when query the routing simulation for token swap on Gonswap platform"
 
+    @classmethod
+    def notification(cls) -> str:
+        return "*Query routing simulation on Gonswap platform...*\n"
+
     def _create_params(
         self,
         amount_in: float,

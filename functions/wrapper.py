@@ -70,6 +70,11 @@ class FunctionWrapper(Generic[Input, Output]):
         raise NotImplementedError("must define a description")
 
     @classmethod
+    @abstractmethod
+    def notification(cls) -> str:
+        raise NotImplementedError("must define a notification")
+
+    @classmethod
     def input_type(cls) -> Type[Input]:
         """The type of input this runnable accepts specified as a type annotation."""
         for c in cls.__orig_bases__:  # type: ignore[attr-defined]
@@ -168,6 +173,9 @@ class FunctionWrapper(Generic[Input, Output]):
             name=self.name(),
             description=self.description(),
             args_schema=self.input_type(),
+            metadata={
+                "notification": self.notification()
+            },
             handle_tool_error=True,
             **kwargs,
         )

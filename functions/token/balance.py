@@ -68,6 +68,10 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
     def description(cls) -> LiteralString:
         return "useful for when you query token balance"
 
+    @classmethod
+    def notification(cls) -> str:
+        return "*Querying token balance...*\n"
+
     @property
     def func(self) -> Optional[Callable[..., BalanceResult]]:
         if self.web3:
