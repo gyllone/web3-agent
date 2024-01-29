@@ -2,7 +2,7 @@
   "chain": {
     "chain_id": 1,
     "name": "ethereum-mainnet",
-    "rpc_url": "https://mainnet.infura.io/v3"
+    "rpc_url": "https://mainnet.infura.io/v3/78a1d80474fe48b99e836611e2ad956f"
   },
   "tokens": [
     {
