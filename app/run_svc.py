@@ -49,8 +49,10 @@ async def main():
     sys.path.append(root_path)
 
     from executors.chatter import Chatter
-    from executors.api import register_chatter_api
+    from executors.api import register_agent_api
     from functions.token.balance import BalanceGetter
+    from functions.defillama.tvl import TVLQuerier
+    from functions.defillama.yielding import YieldQuerier
     from config import ChainConfig, ModelConfig
 
     model_config = ModelConfig.from_file(Path(args.model_config))
@@ -71,6 +73,8 @@ async def main():
         chain_config=chain_config,
         async_web3=web3,
     )
+    tvl_querier = TVLQuerier()
+    yield_querier = YieldQuerier()
     # routing_querier = RoutingQuerier(
     #     chain_config=chain_config,
     #     base_url="https://routing-prod.gonswap.com/quote",
@@ -87,6 +91,8 @@ async def main():
         model=agent_model,
         tools=[
             balance_getter.tool(),
+            tvl_querier.tool(),
+            yield_querier.tool(),
             # routing_querier.tool(),
             python_tool,
             tavily_tool,
@@ -102,7 +108,7 @@ async def main():
         allow_methods=["GET", "POST"],
         allow_headers=["*"],
     )
-    app.include_router(register_chatter_api(chatter))
+    app.include_router(register_agent_api(chatter))
 
     # run app
     uvicorn.run(app, host=args.host, port=args.port)

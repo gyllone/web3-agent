@@ -8,8 +8,8 @@ from common.callbacks.tool_handler import ToolCallbackHandler
 from executors.chatter import Chatter
 
 
-def register_chatter_api(chatter: Chatter) -> APIRouter:
-    router = APIRouter(prefix="/api/chatter", tags=["Gonswap Chatter API Endpoints"])
+def register_agent_api(chatter: Chatter) -> APIRouter:
+    router = APIRouter(prefix="/api/agent", tags=["Web3 Agent Chatting API Endpoints"])
 
     @router.post("/chat")
     async def chat(
