@@ -70,7 +70,7 @@ class RoutingQuerier(FunctionWrapper[RoutingQueryArgs, RoutingResult]):
 
     @classmethod
     def notification(cls) -> str:
-        return "*Query routing simulation on Gonswap platform...*\n"
+        return "*\nQuery routing simulation on Gonswap platform...*\n"
 
     def _create_params(
         self,

@@ -70,7 +70,7 @@ class BalanceGetter(FunctionWrapper[BalanceArgs, BalanceResult]):
 
     @classmethod
     def notification(cls) -> str:
-        return "*Querying token balance...*\n"
+        return "*\nQuerying token balance...*\n"
 
     @property
     def func(self) -> Optional[Callable[..., BalanceResult]]:

@@ -12,8 +12,9 @@ class YieldQueryArgs(BaseModel):
 
 
 class YieldQueryResult(BaseModel):
-    blockchain: str = Field(description="Blockchain name")
-    tvl: float = Field(description="Total value locked in USD")
+    blockchain: Optional[str] = Field(description="Blockchain name")
+    symbol: Optional[str] = Field(description="Symbol of the token")
+    tvl: Optional[float] = Field(description="Total value locked in USD")
     stablecoin: bool = Field(description="Whether the protocol supports stablecoin")
     apy: float = Field(description="APY in percentage")
     apy_pct_1d: Optional[float] = Field(description="APY in percentage for 1 day")
@@ -38,20 +39,20 @@ class YieldQuerier(FunctionWrapper[YieldQueryArgs, YieldQueryResult]):
 
     @classmethod
     def notification(cls) -> str:
-        return "*Query yielding data on DefiLLama...*\n"
+        return "*\nQuery yielding data on DefiLLama...*\n"
 
     @staticmethod
-    def _create_result(resp: Response, protocol: str) -> YieldQueryResult:
+    def _create_result(resp: Response, name: str) -> YieldQueryResult:
         if resp.status_code == 200:
             body: dict = resp.json()
             if body["status"] != "success":
                 raise RuntimeError(f'failed to query yield, status: {body["status"]}')
             data: list = body["data"]
             for item in data:
-                if item["name"].lower() == protocol.lower():
+                if item["name"].lower() == name.lower():
                     return YieldQueryResult(
                         blockchain=item["chain"],
-                        tvl=item["tvl"],
+                        tvl=item["tvlUsd"],
                         stablecoin=item["stablecoin"],
                         apy=item["apy"],
                         apy_pct_1d=item["apyPct1D"],
@@ -60,7 +61,7 @@ class YieldQuerier(FunctionWrapper[YieldQueryArgs, YieldQueryResult]):
                         il_risk=item["ilRisk"],
                         predictions=item["predictions"],
                     )
-            raise RuntimeError(f"yield data of protocol {protocol} not found")
+            raise RuntimeError(f"yield data of protocol {name} not found")
         else:
             raise RuntimeError(f"failed to query TVL: status: {resp.status_code}, response: {resp.text}")
 

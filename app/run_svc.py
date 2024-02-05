@@ -80,10 +80,10 @@ async def main():
     #     base_url="https://routing-prod.gonswap.com/quote",
     # )
     python_tool = PythonAstREPLTool(
-        metadata={"notification": "*Running Python code...*\n"},
+        metadata={"notification": "*\nRunning Python code...*\n"},
     )
     tavily_tool = TavilySearchResults(
-        metadata={"notification": "*Searching data on Tavily...*\n"},
+        metadata={"notification": "*\nSearching data on Tavily...*\n"},
     )
 
     agent_model = ChatOpenAI(**model_config.agent_args.model_dump())
