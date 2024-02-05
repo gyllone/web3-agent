@@ -70,17 +70,17 @@ class TVLQuerier(FunctionWrapper[TVLQueryArgs, TVLQueryResult]):
     @property
     def func(self) -> Optional[Callable[..., TVLQueryResult]]:
         def _query_tvl(
-            protocol: Optional[str] = None,
+            name: Optional[str] = None,
             blockchain: Optional[str] = None,
         ) -> TVLQueryResult:
             """Query defillama information from defiLlama."""
-            if protocol is not None and blockchain is not None:
+            if name is not None and blockchain is not None:
                 resp = httpx.get(self.base_url + "/protocols")
-                return self._create_result_with_protocol_with_blockchain(resp, protocol, blockchain)
-            elif protocol is not None and blockchain is None:
-                resp = httpx.get(self.base_url + f"/tvl/{protocol}")
-                return self._create_result_with_protocol_without_blockchain(resp, protocol)
-            elif protocol is None and blockchain is not None:
+                return self._create_result_with_protocol_with_blockchain(resp, name, blockchain)
+            elif name is not None and blockchain is None:
+                resp = httpx.get(self.base_url + f"/tvl/{name}")
+                return self._create_result_with_protocol_without_blockchain(resp, name)
+            elif name is None and blockchain is not None:
                 resp = httpx.get(self.base_url + "/v2/chains")
                 return self._create_result_without_protocol_with_blockchain(resp, blockchain)
             else:
@@ -91,18 +91,18 @@ class TVLQuerier(FunctionWrapper[TVLQueryArgs, TVLQueryResult]):
     @property
     def async_func(self) -> Optional[Callable[..., Awaitable[TVLQueryResult]]]:
         async def _query_tvl(
-            protocol: Optional[str] = None,
+            name: Optional[str] = None,
             blockchain: Optional[str] = None,
         ) -> TVLQueryResult:
             """Query defillama information from defiLlama."""
             async with AsyncClient() as client:
-                if protocol is not None and blockchain is not None:
+                if name is not None and blockchain is not None:
                     resp = await client.get(self.base_url + "/protocols")
-                    return self._create_result_with_protocol_with_blockchain(resp, protocol, blockchain)
-                elif protocol is not None and blockchain is None:
-                    resp = await client.get(self.base_url + f"/tvl/{protocol}")
-                    return self._create_result_with_protocol_without_blockchain(resp, protocol)
-                elif protocol is None and blockchain is not None:
+                    return self._create_result_with_protocol_with_blockchain(resp, name, blockchain)
+                elif name is not None and blockchain is None:
+                    resp = await client.get(self.base_url + f"/tvl/{name}")
+                    return self._create_result_with_protocol_without_blockchain(resp, name)
+                elif name is None and blockchain is not None:
                     resp = await client.get(self.base_url + "/v2/chains")
                     return self._create_result_without_protocol_with_blockchain(resp, blockchain)
                 else:

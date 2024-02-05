@@ -66,19 +66,19 @@ class YieldQuerier(FunctionWrapper[YieldQueryArgs, YieldQueryResult]):
 
     @property
     def func(self) -> Optional[Callable[..., YieldQueryResult]]:
-        def _query_yield(protocol: str) -> YieldQueryResult:
+        def _query_yield(name: str) -> YieldQueryResult:
             """Query defillama information from defiLlama."""
             resp = httpx.get(self.url)
-            return self._create_result(resp, protocol)
+            return self._create_result(resp, name)
 
         return _query_yield
 
     @property
     def async_func(self) -> Optional[Callable[..., Awaitable[YieldQueryResult]]]:
-        async def _query_yield(protocol: str) -> YieldQueryResult:
+        async def _query_yield(name: str) -> YieldQueryResult:
             """Query defillama information from defiLlama."""
             async with AsyncClient() as client:
                 resp = await client.get(self.url)
-                return self._create_result(resp, protocol)
+                return self._create_result(resp, name)
 
         return _query_yield
