@@ -1,6 +1,6 @@
 from typing import Sequence, Optional, List, Tuple
 from langchain.agents import AgentExecutor, OpenAIFunctionsAgent
-from langchain.tools.base import BaseTool
+from langchain_community.tools import BaseTool
 from langchain.prompts import MessagesPlaceholder
 from langchain.schema import BaseMessage, SystemMessage, HumanMessage, AIMessage
 from langchain.schema.runnable import RunnableConfig

@@ -1,5 +1,5 @@
 from pathlib import Path
-from langchain.tools.render import format_tool_to_openai_function
+from langchain_community.tools.render import format_tool_to_openai_function
 
 from functions.swap.uniswap_v3.routing_query import RoutingQuerier
 from config import ChainConfig
