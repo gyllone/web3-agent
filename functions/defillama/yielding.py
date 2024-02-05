@@ -39,7 +39,7 @@ class YieldQuerier(FunctionWrapper[YieldQueryArgs, YieldQueryResult]):
 
     @classmethod
     def notification(cls) -> str:
-        return "*\nQuery yielding data on DefiLLama...*\n"
+        return "\n*Query yielding data on DefiLLama...*\n"
 
     @staticmethod
     def _create_result(resp: Response, name: str) -> YieldQueryResult:
@@ -49,7 +49,7 @@ class YieldQuerier(FunctionWrapper[YieldQueryArgs, YieldQueryResult]):
                 raise RuntimeError(f'failed to query yield, status: {body["status"]}')
             data: list = body["data"]
             for item in data:
-                if item["name"].lower() == name.lower():
+                if item["project"].lower() == name.lower():
                     return YieldQueryResult(
                         blockchain=item["chain"],
                         tvl=item["tvlUsd"],

@@ -31,7 +31,7 @@ class TVLQuerier(FunctionWrapper[TVLQueryArgs, TVLQueryResult]):
 
     @classmethod
     def notification(cls) -> str:
-        return "*\nQuery TVL data on DefiLLama...*\n"
+        return "\n*Query TVL data on DefiLLama...*\n"
 
     @staticmethod
     def _create_result_with_protocol_without_blockchain(resp: Response) -> TVLQueryResult:
@@ -101,7 +101,7 @@ class TVLQuerier(FunctionWrapper[TVLQueryArgs, TVLQueryResult]):
                     return self._create_result_with_protocol_with_blockchain(resp, name, blockchain)
                 elif name is not None and blockchain is None:
                     resp = await client.get(self.base_url + f"/tvl/{name}")
-                    return self._create_result_with_protocol_without_blockchain(resp, name)
+                    return self._create_result_with_protocol_without_blockchain(resp)
                 elif name is None and blockchain is not None:
                     resp = await client.get(self.base_url + "/v2/chains")
                     return self._create_result_without_protocol_with_blockchain(resp, blockchain)
